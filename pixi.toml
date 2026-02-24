@@ -1,0 +1,33 @@
+[workspace]
+authors = ["Alvaro Gaona <alvgaona@gmail.com>"]
+channels = ["conda-forge"]
+name = "sar"
+platforms = ["osx-arm64"]
+version = "0.1.0"
+
+[tasks]
+
+[feature.humble]
+channels = ["robostack-humble"]
+
+[feature.humble.dependencies]
+ros-humble-desktop = ">=0.10.0,<0.11"
+ros-humble-robot-localization = ">=3.5.3,<4"
+ros-humble-nav2-common = ">=1.1.18,<2"
+ros-humble-moveit-servo = ">=2.5.9,<3"
+ros-humble-moveit = ">=2.5.9,<3"
+ros-humble-dynamixel-sdk = ">=3.8.4,<4"
+ros-humble-gz-ros2-control = ">=0.7.15,<0.8"
+ros-humble-ros-gz-interfaces = ">=0.244.20,<0.245"
+ros-humble-ros-gz-bridge = ">=0.244.20,<0.245"
+ros-humble-ros-gz-sim = ">=0.244.20,<0.245"
+ros-humble-slam-toolbox = ">=2.6.10,<3"
+
+[dependencies]
+colcon-common-extensions = ">=0.3.0,<0.4"
+
+[environments]
+default = ["humble"]
+
+[activation]
+scripts = ["install/setup.sh"]
