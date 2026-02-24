@@ -1,0 +1,16 @@
+[submodule "rosbot_ros"]
+	path = rosbot_ros
+	url = https://github.com/husarion/rosbot_ros
+	branch = humble
+[submodule "husarion_components_description"]
+	path = husarion_components_description
+	url = https://github.com/husarion/husarion_components_description
+[submodule "husarion_controllers"]
+	path = husarion_controllers
+	url = https://github.com/husarion/husarion_controllers
+[submodule "husarion_gz_worlds"]
+	path = husarion_gz_worlds
+	url = https://github.com/husarion/husarion_gz_worlds
+[submodule "m-explore-ros2"]
+	path = m-explore-ros2
+	url = https://github.com/robo-friends/m-explore-ros2
