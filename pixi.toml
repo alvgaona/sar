@@ -26,6 +26,8 @@ ros-humble-ros-gz-interfaces = ">=0.244.20,<0.245"
 ros-humble-ros-gz-bridge = ">=0.244.20,<0.245"
 ros-humble-ros-gz-sim = ">=0.244.20,<0.245"
 ros-humble-slam-toolbox = ">=2.6.10,<3"
+ros-humble-nav2-costmap-2d = ">=1.1.18,<2"
+ros-humble-tf2-ros = ">=0.25.14,<0.26"
 
 [dependencies]
 colcon-common-extensions = ">=0.3.0,<0.4"

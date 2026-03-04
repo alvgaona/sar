@@ -510,9 +510,11 @@ environments:
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-moveit-simple-controller-manager-2.5.9-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav-msgs-4.9.0-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-common-1.1.18-np126py311h2a51a2c_13.conda
+      - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-costmap-2d-1.1.18-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-map-server-1.1.18-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-msgs-1.1.18-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-util-1.1.18-np126py311h2a51a2c_13.conda
+      - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-voxel-grid-1.1.18-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-object-recognition-msgs-2.0.0-np126py311h2a51a2c_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-octomap-1.10.0-py311h43e502b_13.conda
       - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-octomap-msgs-2.0.1-np126py311h2a51a2c_13.conda
@@ -8346,6 +8348,41 @@ packages:
   license: BSD-3-Clause
   size: 45540
   timestamp: 1753313693998
+- conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-costmap-2d-1.1.18-np126py311h2a51a2c_13.conda
+  sha256: 599b355fede1c6355087f74f945c1f362cf9e48122171b66fffe125e825ae082
+  md5: 2cbd9b186adb367f891935fafe85d401
+  depends:
+  - python
+  - ros-humble-angles
+  - ros-humble-geometry-msgs
+  - ros-humble-laser-geometry
+  - ros-humble-map-msgs
+  - ros-humble-message-filters
+  - ros-humble-nav-msgs
+  - ros-humble-nav2-msgs
+  - ros-humble-nav2-util
+  - ros-humble-nav2-voxel-grid
+  - ros-humble-pluginlib
+  - ros-humble-rclcpp
+  - ros-humble-rclcpp-lifecycle
+  - ros-humble-ros-workspace
+  - ros-humble-sensor-msgs
+  - ros-humble-std-msgs
+  - ros-humble-std-srvs
+  - ros-humble-tf2
+  - ros-humble-tf2-geometry-msgs
+  - ros-humble-tf2-ros
+  - ros-humble-tf2-sensor-msgs
+  - ros-humble-visualization-msgs
+  - ros2-distro-mutex 0.7.* humble_*
+  - libcxx >=18
+  - __osx >=11.0
+  - numpy >=1.26.4,<2.0a0
+  - python_abi 3.11.* *_cp311
+  - ros2-distro-mutex >=0.7.0,<0.8.0a0
+  license: BSD-3-Clause
+  size: 909408
+  timestamp: 1753317813702
 - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-map-server-1.1.18-np126py311h2a51a2c_13.conda
   sha256: 3d929e761e31201567c8733b9ad36d2a2f663c855960190c50069d1a29efa0a0
   md5: 39b729c3ed9213706b62c25de8d5e0dc
@@ -8428,6 +8465,22 @@ packages:
   license: BSD-3-Clause
   size: 203889
   timestamp: 1753315042045
+- conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-nav2-voxel-grid-1.1.18-np126py311h2a51a2c_13.conda
+  sha256: 499b7dc6297a225a29544cfc43905c7ec6ec4689d3c0c07aea16b3abec9723b6
+  md5: fa3a25e3f3e9b01e03052918e25d21e1
+  depends:
+  - python
+  - ros-humble-rclcpp
+  - ros-humble-ros-workspace
+  - ros2-distro-mutex 0.7.* humble_*
+  - libcxx >=18
+  - __osx >=11.0
+  - ros2-distro-mutex >=0.7.0,<0.8.0a0
+  - numpy >=1.26.4,<2.0a0
+  - python_abi 3.11.* *_cp311
+  license: BSD-3-Clause
+  size: 47747
+  timestamp: 1753314054923
 - conda: https://conda.anaconda.org/robostack-humble/osx-arm64/ros-humble-object-recognition-msgs-2.0.0-np126py311h2a51a2c_13.conda
   sha256: bd837d7b9ee2822b16d2466db906586103350e7cfee99c6f6f49d85bac7b0b47
   md5: 829a870919b7a3c308dac37181d5b842
