@@ -7,6 +7,9 @@ build/
 install/
 log/
 
+# Build cache
+.cache/
+
 # pixi environments
 .pixi/*
 !.pixi/config.toml
