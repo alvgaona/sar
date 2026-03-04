@@ -6,6 +6,10 @@ platforms = ["osx-arm64"]
 version = "0.1.0"
 
 [tasks]
+clean = "rm -rf build/ install/ log/"
+clean-pkg = "sh -c 'rm -rf build/\"$0\" install/\"$0\"'"
+build = "sh -c 'colcon build --symlink-install --event-handlers console_direct+ --cmake-args -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS=\"-Wall\" -DPython3_EXECUTABLE=$(which python) -DPython_EXECUTABLE=$(which python)'"
+build-pkg = "sh -c 'colcon build --packages-up-to \"$0\" --symlink-install --event-handlers console_direct+ --cmake-args -G Ninja -DCMAKE_BUILD_TYPE=Debug -DCMAKE_EXPORT_COMPILE_COMMANDS=ON -DCMAKE_CXX_FLAGS=\"-Wall\" -DPython3_EXECUTABLE=$(which python) -DPython_EXECUTABLE=$(which python)'"
 
 [feature.humble]
 channels = ["robostack-humble"]
@@ -25,6 +29,7 @@ ros-humble-slam-toolbox = ">=2.6.10,<3"
 
 [dependencies]
 colcon-common-extensions = ">=0.3.0,<0.4"
+ninja = ">=1.13.2,<2"
 
 [environments]
 default = ["humble"]
