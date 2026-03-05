@@ -1,0 +1,27 @@
+<?xml version="1.0"?>
+<robot name="sar_robot" xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:arg name="mock" default="false" />
+
+  <xacro:include filename="$(find sar_description)/urdf/body.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/wheel.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/ros2_control.urdf.xacro" />
+
+  <xacro:property name="wheel_radius" value="0.050" />
+  <xacro:property name="wheel_separation_x" value="0.170" />
+  <xacro:property name="wheel_separation_y" value="0.270" />
+
+  <xacro:body wheel_radius="${wheel_radius}" />
+
+  <xacro:wheel side="fl" wheel_radius="${wheel_radius}"
+    x="${wheel_separation_x / 2}" y="${wheel_separation_y / 2}" />
+  <xacro:wheel side="fr" wheel_radius="${wheel_radius}"
+    x="${wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
+  <xacro:wheel side="rl" wheel_radius="${wheel_radius}"
+    x="${-wheel_separation_x / 2}" y="${wheel_separation_y / 2}" />
+  <xacro:wheel side="rr" wheel_radius="${wheel_radius}"
+    x="${-wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
+
+  <xacro:sar_ros2_control mock="$(arg mock)" />
+
+</robot>

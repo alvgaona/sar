@@ -1,0 +1,9 @@
+<library path="sar_control">
+  <class name="sar_control/SarSystemHardware"
+         type="sar_control::SarSystemHardware"
+         base_class_type="hardware_interface::SystemInterface">
+    <description>
+      Hardware interface for SAR robot communicating with Arduino over serial.
+    </description>
+  </class>
+</library>
