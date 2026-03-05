@@ -23,6 +23,11 @@ hardware_interface::CallbackReturn SarSystemHardware::on_init(
   mock_ = (it != info_.hardware_parameters.end() &&
     (it->second == "true" || it->second == "True"));
 
+  auto wr = info_.hardware_parameters.find("wheel_radius");
+  if (wr != info_.hardware_parameters.end()) {
+    wheel_radius_ = std::stod(wr->second);
+  }
+
   if (info_.joints.size() != 4) {
     RCLCPP_ERROR(
       rclcpp::get_logger("SarSystemHardware"),
@@ -143,11 +148,12 @@ hardware_interface::return_type SarSystemHardware::read(
     return hardware_interface::return_type::ERROR;
   }
 
+  double inv_scale = (wheel_radius_ > 0.0) ? 1.0 / (wheel_radius_ * 1000.0) : 1.0;
   WheelValues encoder_values = comms_.read_encoder_values();
-  front_left_.position = encoder_values.front_left;
-  front_right_.position = encoder_values.front_right;
-  rear_left_.position = encoder_values.rear_left;
-  rear_right_.position = encoder_values.rear_right;
+  front_left_.position = encoder_values.front_left * inv_scale;
+  front_right_.position = encoder_values.front_right * inv_scale;
+  rear_left_.position = encoder_values.rear_left * inv_scale;
+  rear_right_.position = encoder_values.rear_right * inv_scale;
 
   return hardware_interface::return_type::OK;
 }
@@ -159,11 +165,12 @@ hardware_interface::return_type SarSystemHardware::write(
     return hardware_interface::return_type::ERROR;
   }
 
+  double scale = (wheel_radius_ > 0.0) ? wheel_radius_ * 1000.0 : 1.0;
   WheelValues cmd;
-  cmd.front_left = front_left_.velocity_command;
-  cmd.front_right = front_right_.velocity_command;
-  cmd.rear_left = rear_left_.velocity_command;
-  cmd.rear_right = rear_right_.velocity_command;
+  cmd.front_left = front_left_.velocity_command * scale;
+  cmd.front_right = front_right_.velocity_command * scale;
+  cmd.rear_left = rear_left_.velocity_command * scale;
+  cmd.rear_right = rear_right_.velocity_command * scale;
   comms_.send_velocities(cmd);
 
   return hardware_interface::return_type::OK;

@@ -29,6 +29,16 @@ To run in mock mode (no Arduino needed):
 ros2 launch sar_control control.launch.py mock:=true
 ```
 
+## Unit Conversion
+
+The mecanum drive controller outputs wheel velocities in rad/s, but the Arduino expects mm/s. Set the
+`wheel_radius` hardware parameter (in meters) to enable automatic conversion:
+
+- **Write**: rad/s × wheel_radius × 1000 → mm/s
+- **Read**: mm ÷ (wheel_radius × 1000) → rad
+
+When `wheel_radius` is `0.0` (default), values pass through without conversion.
+
 ## Serial Protocol
 
 | Direction | Format | Example |
