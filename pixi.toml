@@ -29,9 +29,14 @@ ros-humble-slam-toolbox = ">=2.6.10,<3"
 ros-humble-nav2-costmap-2d = ">=1.1.18,<2"
 ros-humble-tf2-ros = ">=0.25.14,<0.26"
 ros-humble-ros2-control = ">=2.51.0,<3"
+ros-humble-ros2-controllers = ">=2.48.0,<3"
+ros-humble-generate-parameter-library = ">=0.5.0,<0.6"
+ros-humble-joint-state-publisher = ">=2.4.0,<3"
+ros-humble-laser-filters = ">=2.0.9,<3"
 
 [dependencies]
 colcon-common-extensions = ">=0.3.0,<0.4"
+pyudev = ">=0.24.3,<0.25"
 ninja = ">=1.13.2,<2"
 
 [environments]
