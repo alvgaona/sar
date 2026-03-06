@@ -9,6 +9,7 @@ apt-get install -y \
   ros-humble-dynamixel-interfaces \
   ros-humble-dynamixel-sdk \
   ros-humble-generate-parameter-library \
+  ros-humble-image-geometry \
   ros-humble-gz-ros2-control \
   ros-humble-joint-state-publisher \
   ros-humble-laser-filters \
