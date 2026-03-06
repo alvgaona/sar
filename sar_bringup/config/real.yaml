@@ -1,0 +1,14 @@
+control:
+  mock: false
+
+slam:
+  params_file: ""
+
+exploration:
+  params_file: ""
+
+perception:
+  use_realsense: true
+  marker_size: 0.75
+  aruco_dict: "DICT_6X6_1000"
+  image_topic: "/camera/color/image_raw"
