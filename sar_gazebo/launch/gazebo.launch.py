@@ -67,9 +67,9 @@ def generate_launch_description():
         launch_arguments={
             "robot_model": "rosbot_xl",
             "configuration": "autonomy",
-            "x": "0.0",
-            "y": "0.0",
-            "z": "0.2",
+            # "x": "0.0",
+            # "y": "0.0",
+            # "z": "0.2",
         }.items(),
     )
 
