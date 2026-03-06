@@ -10,7 +10,15 @@ find_package(nav_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(cv_bridge REQUIRED)
-find_package(rerun_sdk REQUIRED)
+find_package(rerun_sdk QUIET)
+if(NOT rerun_sdk_FOUND)
+  include(FetchContent)
+  FetchContent_Declare(
+    rerun_sdk
+    URL https://github.com/rerun-io/rerun/releases/download/0.30.1/rerun_cpp_sdk.zip
+  )
+  FetchContent_MakeAvailable(rerun_sdk)
+endif()
 
 add_executable(rerun_bridge src/rerun_bridge.cpp)
 target_link_libraries(rerun_bridge rerun_sdk)
