@@ -1,0 +1,27 @@
+services:
+  sar:
+    image: alvgaona/ros:humble-desktop-vnc
+    container_name: sar
+    hostname: sar-dev
+    environment:
+      - HOST_UID=${HOST_UID:-501}
+      - HOST_GID=${HOST_GID:-20}
+      - VNC_ENABLE=1
+      - VNC_RESOLUTION=1920x1080
+      - VNC_DEPTH=24
+      - ROS_DOMAIN_ID=0
+      - ROS_LOCALHOST_ONLY=0
+      - DISPLAY=:1
+    ports:
+      - "5901:5901"
+    volumes:
+      - ./:/root/sar_ws
+    command: bash -c 'while true; do sleep 1000; done'
+    stdin_open: true
+    tty: true
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 8G
