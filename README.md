@@ -5,23 +5,33 @@ Universidad Politecnica de Madrid.
 
 ## Installation
 
-### Pixi (macOS / Development)
+### Pixi (macOS / Ubuntu)
 
 ```bash
 pixi install
 pixi shell
+colcon build --symlink-install
+source install/setup.sh
 ```
 
-### Docker (Linux / Testing)
+### Ubuntu 22.04 (Native)
 
-Build and start the container:
+Install ROS 2 Humble, then install additional dependencies and build:
+
+```bash
+sudo ./scripts/install-deps.sh
+colcon build --symlink-install
+source install/setup.sh
+```
+
+### Docker (macOS / Ubuntu / Windows — amd64 / arm64)
 
 ```bash
 docker compose up -d
 docker compose exec sar bash
 ```
 
-Inside the container, install dependencies and build:
+Inside the container:
 
 ```bash
 ./scripts/install-deps.sh
