@@ -21,4 +21,5 @@ apt-get install -y \
   ros-humble-realtime-tools \
   ros-humble-robot-localization \
   ros-humble-ros2-control \
+  ros-humble-realsense2-camera \
   ros-humble-ros2-controllers
