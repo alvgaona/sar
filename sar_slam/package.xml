@@ -5,7 +5,7 @@
   <version>0.0.1</version>
   <description>SLAM package for the SAR project</description>
   <maintainer email="alvgaona@gmail.com">alvaro</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

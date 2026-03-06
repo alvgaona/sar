@@ -5,7 +5,7 @@
   <version>0.0.1</version>
   <description>ros2_control hardware interface for SAR robot (serial to Arduino)</description>
   <maintainer email="alvgaona@gmail.com">Alvaro J. Gaona</maintainer>
-  <license>MIT</license>
+  <license>Apache-2.0</license>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
 

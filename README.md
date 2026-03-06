@@ -63,5 +63,5 @@ ros2 launch sar_control control.launch.py mock:=true
 
 ## License
 
-[MIT](LICENSE.md)
+[Apache 2.0](LICENSE)
 
