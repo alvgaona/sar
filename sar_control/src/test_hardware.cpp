@@ -17,7 +17,7 @@ int main(int argc, char ** argv)
   hardware_interface::HardwareInfo info;
   info.name = "sar_system";
   info.type = "system";
-  info.hardware_parameters["device"] = "/dev/ttyUSB0";
+  info.hardware_parameters["device"] = "/dev/ttyACM0";
   info.hardware_parameters["baud_rate"] = "115200";
   info.hardware_parameters["mock"] = "True";
 

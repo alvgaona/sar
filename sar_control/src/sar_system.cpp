@@ -70,6 +70,18 @@ hardware_interface::CallbackReturn SarSystemHardware::on_configure(
   RCLCPP_INFO(
     rclcpp::get_logger("SarSystemHardware"),
     "Connected to Arduino on %s at %d baud", device_.c_str(), baud_rate_);
+
+  char *color_env = std::getenv("RCUTILS_COLORIZED_OUTPUT");
+  if ((color_env == nullptr) || (atoi(color_env)!=0)) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("SarSystemHardware"),
+      "\033[96m");
+  }
+  RCLCPP_INFO(
+  rclcpp::get_logger("SarSystemHardware"),
+  "Sleeping for 2 seconds to allow Arduino to reset...\033[0m");
+
+  sleep(2); // Wait for Arduino to reset after serial connection is opened
   return hardware_interface::CallbackReturn::SUCCESS;
 }
 
@@ -142,11 +154,18 @@ std::vector<hardware_interface::CommandInterface> SarSystemHardware::export_comm
 }
 
 hardware_interface::return_type SarSystemHardware::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
 {
   if (!comms_.connected()) {
     return hardware_interface::return_type::ERROR;
   }
+
+  WheelValues old_values = {
+    front_left_.position,
+    front_right_.position,
+    rear_left_.position,
+    rear_right_.position
+  };
 
   double inv_scale = (wheel_radius_ > 0.0) ? 1.0 / (wheel_radius_ * 1000.0) : 1.0;
   WheelValues encoder_values = comms_.read_encoder_values();
@@ -154,6 +173,11 @@ hardware_interface::return_type SarSystemHardware::read(
   front_right_.position = encoder_values.front_right * inv_scale;
   rear_left_.position = encoder_values.rear_left * inv_scale;
   rear_right_.position = encoder_values.rear_right * inv_scale;
+
+  front_left_.velocity = (front_left_.position - old_values.front_left) / period.seconds();
+  front_right_.velocity = (front_right_.position - old_values.front_right) / period.seconds();
+  rear_left_.velocity = (rear_left_.position - old_values.rear_left) / period.seconds();
+  rear_right_.velocity = (rear_right_.position - old_values.rear_right) / period.seconds();
 
   return hardware_interface::return_type::OK;
 }
