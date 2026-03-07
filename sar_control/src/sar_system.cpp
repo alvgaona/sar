@@ -71,9 +71,15 @@ hardware_interface::CallbackReturn SarSystemHardware::on_configure(
     rclcpp::get_logger("SarSystemHardware"),
     "Connected to Arduino on %s at %d baud", device_.c_str(), baud_rate_);
 
+  char *color_env = std::getenv("RCUTILS_COLORIZED_OUTPUT");
+  if ((color_env == nullptr) || (atoi(color_env)!=0)) {
+    RCLCPP_INFO(
+      rclcpp::get_logger("SarSystemHardware"),
+      "\033[96m");
+  }
   RCLCPP_INFO(
   rclcpp::get_logger("SarSystemHardware"),
-  "Sleeping for 2 seconds to allow Arduino to reset...");
+  "Sleeping for 2 seconds to allow Arduino to reset...\033[0m");
 
   sleep(2); // Wait for Arduino to reset after serial connection is opened
   return hardware_interface::CallbackReturn::SUCCESS;
