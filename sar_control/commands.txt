@@ -1,0 +1,7 @@
+//Make Arduino uploadable
+sudo chmod a+rw /dev/ttyACM0
+//compile package
+colcon build --symlink-install --packages-select sar_control
+source install/setup.bash
+//launch (don't use mock for real connection)
+ros2 launch sar_control control.launch.py mock:=true

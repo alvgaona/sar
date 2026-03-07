@@ -2,6 +2,9 @@
 .claude/
 CLAUDE.md
 
+#VSCode
+.vscode/
+
 # ROS 2
 build/
 install/
