@@ -1,0 +1,3 @@
+Run this in a new terminal (must have focus):
+
+ros2 run teleop_twist_keyboard teleop_twist_keyboard --ros-args -p stamped:=true --remap cmd_vel:=my_cmd_vel
