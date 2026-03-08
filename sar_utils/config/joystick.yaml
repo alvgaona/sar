@@ -6,7 +6,7 @@ joy_node:
 
 teleop_node:
   ros__parameters:
-    publish_stamped_twist: true
+    publish_stamped_twist: false
     axis_linear:
       x: 1
       y: 0
@@ -22,7 +22,7 @@ teleop_node:
       yaw: 0.5
     scale_angular_turbo:
       yaw: 1.0
-    
+
     enable_button: 4
     enable_turbo_button: 6
 
