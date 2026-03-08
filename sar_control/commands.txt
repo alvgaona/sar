@@ -1,5 +1,7 @@
+//Get Arduino device name
+readlink -e /dev/serial/by-id/*Arduino*
 //Make Arduino uploadable
-sudo chmod a+rw /dev/ttyACM0
+sudo chmod a+rw $(readlink -enq /dev/serial/by-id/*Arduino*)
 //compile package
 colcon build --symlink-install --packages-select sar_control
 source install/setup.bash

@@ -1,12 +1,11 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, RegisterEventHandler, TimerAction
+from launch.actions import DeclareLaunchArgument, TimerAction
 from launch.substitutions import (
     Command,
     FindExecutable,
     LaunchConfiguration,
     PathJoinSubstitution,
 )
-from launch.event_handlers import OnProcessExit
 from launch_ros.actions import Node
 from launch_ros.substitutions import FindPackageShare
 
@@ -78,16 +77,6 @@ def generate_launch_description():
         period=3.0,
         actions=[joint_state_broadcaster_spawner, mecanum_drive_controller_spawner],
     )
-
-    # Delay start of robot_controller after `joint_state_broadcaster`
-    # delay_robot_controller_spawner_after_joint_state_broadcaster_spawner = (
-    #     RegisterEventHandler(
-    #         event_handler=OnProcessExit(
-    #             target_action=delayed_joint_state_broadcaster,
-    #             on_exit=[mecanum_drive_controller_spawner],
-    #         )
-    #     )
-    # )
 
     return LaunchDescription(
         [
