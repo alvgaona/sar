@@ -1,5 +1,7 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, TimerAction
+from launch.conditions import LaunchConfigurationEquals
+from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, TimerAction
 from launch.substitutions import (
     Command,
     FindExecutable,
@@ -14,6 +16,21 @@ def generate_launch_description():
     mock = LaunchConfiguration("mock")
     baud_rate = LaunchConfiguration("baud_rate")
     device = LaunchConfiguration("device")
+
+    joystick_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [
+                    FindPackageShare("sar_control"),
+                    "launch",
+                    "joystick.launch.py",
+                ]
+            )
+        ),
+        launch_arguments={"cmd_vel_topic": "/mecanum_drive_controller/cmd_vel"}.items(),
+        condition=LaunchConfigurationEquals("manual", "true"),
+    )
+    # TODO: Add a Node or LaunchDescription for non manual mode (e.g. autonomous navigation)
 
     robot_description_content = Command(
         [
@@ -84,6 +101,7 @@ def generate_launch_description():
                 "mock",
                 default_value="false",
                 description="Whether to use the mock hardware interface",
+                choices=["true", "false"],
             ),
             DeclareLaunchArgument(
                 "baud_rate",
@@ -95,8 +113,15 @@ def generate_launch_description():
                 default_value="/dev/ttyACM0",
                 description="Device path for the serial connection",
             ),
+            DeclareLaunchArgument(
+                "manual",
+                default_value="false",
+                description="Whether to use manual control (joystick)",
+                choices=["true", "false"],
+            ),
             controller_manager,
             robot_state_publisher,
             delayed_joint_state_broadcaster,
+            joystick_launch,
         ]
     )
