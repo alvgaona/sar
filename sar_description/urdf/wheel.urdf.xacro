@@ -3,7 +3,7 @@
 
   <xacro:macro name="wheel" params="side wheel_radius x y">
 
-    <xacro:property name="wheel_thickness" value="0.031" />
+    <xacro:property name="wheel_thickness" value="0.05" />
     <xacro:property name="wheel_mass" value="0.4" />
 
     <joint name="${side}_wheel_joint" type="continuous">

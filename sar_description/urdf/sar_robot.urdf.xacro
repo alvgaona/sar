@@ -8,11 +8,10 @@
   <xacro:include filename="$(find sar_description)/urdf/body.urdf.xacro" />
   <xacro:include filename="$(find sar_description)/urdf/wheel.urdf.xacro" />
   <xacro:include filename="$(find sar_description)/urdf/ros2_control.urdf.xacro" />
-  <xacro:include filename="$(find sar_description)/urdf/rplidar.urdf.xacro" />
 
-  <xacro:property name="wheel_radius" value="0.03" />
-  <xacro:property name="wheel_separation_x" value="0.180" />
-  <xacro:property name="wheel_separation_y" value="0.178" />
+  <xacro:property name="wheel_radius" value="0.050" />
+  <xacro:property name="wheel_separation_x" value="0.170" />
+  <xacro:property name="wheel_separation_y" value="0.270" />
 
   <xacro:body wheel_radius="${wheel_radius}" />
 
@@ -24,9 +23,7 @@
     x="${-wheel_separation_x / 2}" y="${wheel_separation_y / 2}" />
   <xacro:wheel side="rr" wheel_radius="${wheel_radius}"
     x="${-wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
-  
-  <xacro:rplidar x="0.0" y="0.0" z="0.03"/>
 
-  <xacro:sar_ros2_control mock="$(arg mock)" baud_rate="$(arg baud_rate)" device="$(arg device)" />
+  <xacro:sar_ros2_control mock="$(arg mock)" wheel_radius="${wheel_radius}" baud_rate="$(arg baud_rate)" device="$(arg device)" />
 
 </robot>
