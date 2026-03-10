@@ -14,7 +14,7 @@
     <link name="body_link">
       <visual>
         <geometry>
-          <box size="0.240 0.220 0.060" />
+          <box size="0.240 0.178 0.060" />
         </geometry>
         <material name="dark_grey">
           <color rgba="0.3 0.3 0.3 1.0" />
@@ -23,7 +23,7 @@
 
       <collision>
         <geometry>
-          <box size="0.240 0.220 0.060" />
+          <box size="0.240 0.178 0.060" />
         </geometry>
       </collision>
 
