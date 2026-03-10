@@ -23,11 +23,6 @@ hardware_interface::CallbackReturn SarSystemHardware::on_init(
   mock_ = (it != info_.hardware_parameters.end() &&
     (it->second == "true" || it->second == "True"));
 
-  auto wr = info_.hardware_parameters.find("wheel_radius");
-  if (wr != info_.hardware_parameters.end()) {
-    wheel_radius_ = std::stod(wr->second);
-  }
-
   if (info_.joints.size() != 4) {
     RCLCPP_ERROR(
       rclcpp::get_logger("SarSystemHardware"),
@@ -45,10 +40,10 @@ hardware_interface::CallbackReturn SarSystemHardware::on_init(
       return hardware_interface::CallbackReturn::ERROR;
     }
 
-    if (joint.state_interfaces.size() != 2) {
+    if (joint.state_interfaces.size() != 1) {
       RCLCPP_ERROR(
         rclcpp::get_logger("SarSystemHardware"),
-        "Joint '%s' must have exactly two state interfaces", joint.name.c_str());
+        "Joint '%s' must have exactly one state interface", joint.name.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
@@ -115,22 +110,14 @@ std::vector<hardware_interface::StateInterface> SarSystemHardware::export_state_
   std::vector<hardware_interface::StateInterface> state_interfaces;
 
   state_interfaces.emplace_back(
-    info_.joints[0].name, hardware_interface::HW_IF_POSITION, &front_left_.position);
-  state_interfaces.emplace_back(
     info_.joints[0].name, hardware_interface::HW_IF_VELOCITY, &front_left_.velocity);
 
-  state_interfaces.emplace_back(
-    info_.joints[1].name, hardware_interface::HW_IF_POSITION, &front_right_.position);
   state_interfaces.emplace_back(
     info_.joints[1].name, hardware_interface::HW_IF_VELOCITY, &front_right_.velocity);
 
   state_interfaces.emplace_back(
-    info_.joints[2].name, hardware_interface::HW_IF_POSITION, &rear_left_.position);
-  state_interfaces.emplace_back(
     info_.joints[2].name, hardware_interface::HW_IF_VELOCITY, &rear_left_.velocity);
 
-  state_interfaces.emplace_back(
-    info_.joints[3].name, hardware_interface::HW_IF_POSITION, &rear_right_.position);
   state_interfaces.emplace_back(
     info_.joints[3].name, hardware_interface::HW_IF_VELOCITY, &rear_right_.velocity);
 
@@ -154,30 +141,19 @@ std::vector<hardware_interface::CommandInterface> SarSystemHardware::export_comm
 }
 
 hardware_interface::return_type SarSystemHardware::read(
-  const rclcpp::Time & /*time*/, const rclcpp::Duration & period)
+  const rclcpp::Time & /*time*/, const rclcpp::Duration & /*period*/)
 {
   if (!comms_.connected()) {
     return hardware_interface::return_type::ERROR;
   }
 
-  WheelValues old_values = {
-    front_left_.position,
-    front_right_.position,
-    rear_left_.position,
-    rear_right_.position
-  };
-
-  double inv_scale = (wheel_radius_ > 0.0) ? 1.0 / (wheel_radius_ * 1000.0) : 1.0;
+  // read velocities from arduino (expecting rad/s)
   WheelValues encoder_values = comms_.read_encoder_values();
-  front_left_.position = encoder_values.front_left * inv_scale;
-  front_right_.position = encoder_values.front_right * inv_scale;
-  rear_left_.position = encoder_values.rear_left * inv_scale;
-  rear_right_.position = encoder_values.rear_right * inv_scale;
 
-  front_left_.velocity = (front_left_.position - old_values.front_left) / period.seconds();
-  front_right_.velocity = (front_right_.position - old_values.front_right) / period.seconds();
-  rear_left_.velocity = (rear_left_.position - old_values.rear_left) / period.seconds();
-  rear_right_.velocity = (rear_right_.position - old_values.rear_right) / period.seconds();
+  front_left_.velocity = encoder_values.front_left;
+  front_right_.velocity = encoder_values.front_right;
+  rear_left_.velocity = encoder_values.rear_left;
+  rear_right_.velocity = encoder_values.rear_right;
 
   return hardware_interface::return_type::OK;
 }
@@ -189,7 +165,7 @@ hardware_interface::return_type SarSystemHardware::write(
     return hardware_interface::return_type::ERROR;
   }
 
-  double scale = (wheel_radius_ > 0.0) ? wheel_radius_ * 1000.0 : 1.0;
+  double scale = 1.0; // respond to velocity commands in rad/s directly, without scaling to mm/s
   WheelValues cmd;
   cmd.front_left = front_left_.velocity_command * scale;
   cmd.front_right = front_right_.velocity_command * scale;
