@@ -1,0 +1,33 @@
+<?xml version="1.0"?>
+<robot xmlns:xacro="http://wiki.ros.org/xacro">
+
+  <xacro:macro name="rplidar" params="x y z">
+    <joint name="rplidar_joint" type="fixed">
+      <parent link="body_link" />
+      <child link="rplidar_link" />
+      <origin xyz="${x} ${y} ${z}" rpy="0.0 0.0 0.0" />
+    </joint>
+
+    <link name="rplidar_link">
+      <visual>
+        <geometry>
+          <mesh filename="file://$(find sar_description)/meshes/rplidar_main.STL" scale="0.002 0.002 0.002" />
+        </geometry>
+        <origin xyz="-0.07 0.067 0.0" rpy="${pi/2} 0.0 0.0" />
+        <material name="rplidar_color">
+          <color rgba="0.1 0.1 0.1 1.0" />
+        </material>
+      </visual>
+
+      <collision>
+        <geometry>
+          <cylinder radius="0.07" length="0.055" />
+        </geometry>
+        <origin xyz="0.0 0.0 0.085" rpy="0.0 0.0 0.0" />
+      </collision>
+
+    </link>
+
+  </xacro:macro>
+
+</robot>
