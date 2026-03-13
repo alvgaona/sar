@@ -72,9 +72,9 @@ hardware_interface::CallbackReturn SarSystemHardware::on_configure(
       rclcpp::get_logger("SarSystemHardware"),
       "\033[96m");
   }
-  RCLCPP_INFO(
-  rclcpp::get_logger("SarSystemHardware"),
-  "Sleeping for 2 seconds to allow Arduino to reset...\033[0m");
+  RCLCPP_WARN(
+    rclcpp::get_logger("SarSystemHardware"),
+    "Sleeping for 2 seconds to allow Arduino to reset...\033[0m");
 
   sleep(2); // Wait for Arduino to reset after serial connection is opened
   return hardware_interface::CallbackReturn::SUCCESS;
@@ -165,12 +165,11 @@ hardware_interface::return_type SarSystemHardware::write(
     return hardware_interface::return_type::ERROR;
   }
 
-  double scale = 1.0; // respond to velocity commands in rad/s directly, without scaling to mm/s
   WheelValues cmd;
-  cmd.front_left = front_left_.velocity_command * scale;
-  cmd.front_right = front_right_.velocity_command * scale;
-  cmd.rear_left = rear_left_.velocity_command * scale;
-  cmd.rear_right = rear_right_.velocity_command * scale;
+  cmd.front_left = front_left_.velocity_command;
+  cmd.front_right = front_right_.velocity_command;
+  cmd.rear_left = rear_left_.velocity_command;
+  cmd.rear_right = rear_right_.velocity_command;
   comms_.send_velocities(cmd);
 
   return hardware_interface::return_type::OK;
