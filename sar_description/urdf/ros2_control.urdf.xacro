@@ -1,12 +1,12 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
-  <xacro:macro name="sar_ros2_control" params="mock:=false">
+  <xacro:macro name="sar_ros2_control" params="mock:=false baud_rate:=115200 device:=/dev/ttyACM0">
     <ros2_control name="sar_system" type="system">
       <hardware>
         <plugin>sar_control/SarSystemHardware</plugin>
-        <param name="device">/dev/ttyUSB0</param>
-        <param name="baud_rate">115200</param>
+        <param name="device">${device}</param>
+        <param name="baud_rate">${baud_rate}</param>
         <param name="mock">${mock}</param>
       </hardware>
 

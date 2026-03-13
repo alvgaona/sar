@@ -2,6 +2,8 @@
 <robot name="sar_robot" xmlns:xacro="http://wiki.ros.org/xacro">
 
   <xacro:arg name="mock" default="false" />
+  <xacro:arg name="baud_rate" default="115200" />
+  <xacro:arg name="device" default="/dev/ttyACM0" />
 
   <xacro:include filename="$(find sar_description)/urdf/body.urdf.xacro" />
   <xacro:include filename="$(find sar_description)/urdf/wheel.urdf.xacro" />
@@ -24,6 +26,6 @@
 
   <xacro:rplidar x="0.0" y="0.0" z="0.03"/>
   
-  <xacro:sar_ros2_control mock="$(arg mock)"/>
+  <xacro:sar_ros2_control mock="$(arg mock)" baud_rate="$(arg baud_rate)" device="$(arg device)" />
 
 </robot>

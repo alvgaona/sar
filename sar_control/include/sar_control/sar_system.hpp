@@ -47,7 +47,6 @@ private:
   std::string device_;
   int baud_rate_ = 115200;
   bool mock_ = false;
-  double wheel_radius_ = 0.0;
 
   struct WheelState
   {

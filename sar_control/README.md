@@ -1,12 +1,34 @@
 # sar_control
 
-ros2_control hardware interface for the SAR robot. Communicates with an Arduino Uno over USB serial to command
-4 mecanum wheel velocities (mm/s) and read encoder feedback.
+ros2_control hardware interface for the SAR robot. Communicates with an Arduino Uno/Mega over USB serial to command
+4 mecanum wheel velocities (rad/s) and read encoder feedback.
 
 ## Build
 
 ```bash
+colcon build --symlink-install --packages-select sar_control
+source install/setup.bash
+```
+or
+```bash
 pixi run build-pkg sar_control
+```
+
+## Arduino configuration (Linux / Raspberry Pi)
+
+To get the serial device name of your board, use this command:
+
+```bash
+readlink -e /dev/serial/by-id/*Arduino*
+```
+
+If it's different than `/dev/ttyACM0`, append `device:=${yourDeviceNameHere}` to the launch call.
+<!-- Maybe a udev rule would be nice -->
+
+Before flashing the software onto the board, it needs to be writable, so use this command:
+
+```bash
+sudo chmod a+rw $(readlink -enq /dev/serial/by-id/*Arduino*)
 ```
 
 ## Test (macOS)
@@ -31,13 +53,7 @@ ros2 launch sar_control control.launch.py mock:=true
 
 ## Unit Conversion
 
-The mecanum drive controller outputs wheel velocities in rad/s, but the Arduino expects mm/s. Set the
-`wheel_radius` hardware parameter (in meters) to enable automatic conversion:
-
-- **Write**: rad/s × wheel_radius × 1000 → mm/s
-- **Read**: mm ÷ (wheel_radius × 1000) → rad
-
-When `wheel_radius` is `0.0` (default), values pass through without conversion.
+The mecanum drive controller outputs and receives wheel velocities in rad/s.
 
 ## Serial Protocol
 
