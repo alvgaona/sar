@@ -19,6 +19,7 @@ apt-get install -y \
   ros-humble-moveit-servo \
   ros-humble-nav2-costmap-2d \
   ros-humble-nav2-msgs \
+  ros-humble-nav2-bringup \
   ros-humble-realtime-tools \
   ros-humble-robot-localization \
   ros-humble-ros2-control \
