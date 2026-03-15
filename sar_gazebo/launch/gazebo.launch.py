@@ -24,12 +24,18 @@ def generate_launch_description():
         [FindPackageShare(PACKAGE_NAME), "models"]
     )
 
+    husarion_models_path = PathJoinSubstitution(
+        [FindPackageShare("husarion_gz_worlds"), "models"]
+    )
+
     set_gazebo_model_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
             EnvironmentVariable('GZ_SIM_RESOURCE_PATH', default_value=''),
             os.pathsep,
-            models_path
+            models_path,
+            os.pathsep,
+            husarion_models_path
         ]
     )
 
