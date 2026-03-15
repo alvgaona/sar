@@ -2,12 +2,15 @@ control:
   mock: false
 
 slam:
+  enabled: true
   params_file: ""
 
 exploration:
+  enabled: true
   params_file: ""
 
 perception:
+  enabled: true
   use_realsense: true
   marker_size: 0.75
   aruco_dict: "DICT_6X6_1000"

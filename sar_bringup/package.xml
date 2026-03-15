@@ -14,7 +14,6 @@
   <exec_depend>sar_exploration</exec_depend>
   <exec_depend>sar_gazebo</exec_depend>
   <exec_depend>sar_perception</exec_depend>
-  <exec_depend>sar_rerun</exec_depend>
   <exec_depend>sar_slam</exec_depend>
 
   <export>
