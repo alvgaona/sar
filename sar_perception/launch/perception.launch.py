@@ -21,7 +21,7 @@ def generate_launch_description():
     )
 
     declare_marker_size_arg = DeclareLaunchArgument(
-        "marker_size", default_value="0.75", description="ArUco marker size in meters"
+        "marker_size", default_value="0.30", description="ArUco marker size in meters"
     )
 
     declare_aruco_dict_arg = DeclareLaunchArgument(

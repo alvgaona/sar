@@ -3,7 +3,7 @@
 import rclpy
 from rclpy.node import Node
 from sensor_msgs.msg import Image
-from sar_msgs.msg import ArucoDetection
+from sar_msgs.msg import ArucoMsg
 from cv_bridge import CvBridge
 import cv2
 import numpy as np
@@ -14,7 +14,7 @@ class ArucoDetector(Node):
         super().__init__('aruco_detector')
 
         # Parameters
-        self.declare_parameter('marker_size', 0.75)  # Marker size in meters (75cm default)
+        self.declare_parameter('marker_size', 0.30)
         self.declare_parameter('aruco_dict', 'DICT_6X6_1000')  # ArUco dictionary
         self.declare_parameter('camera_fx', 1108.51)  # Focal length x
         self.declare_parameter('camera_fy', 1108.51)  # Focal length y
@@ -66,7 +66,11 @@ class ArucoDetector(Node):
         # Important: use DetectorParameters_create for Legacy API compatibility.
         # Otherwise, there's a segmentation fault
         self.aruco_params = cv2.aruco.DetectorParameters_create()
-        
+        self.aruco_params.maxMarkerPerimeterRate = 10.0
+        self.aruco_params.adaptiveThreshWinSizeMin = 3
+        self.aruco_params.adaptiveThreshWinSizeMax = 30
+        self.aruco_params.adaptiveThreshWinSizeStep = 5
+
         self.bridge = CvBridge()
 
         # Subscriber
@@ -77,8 +81,8 @@ class ArucoDetector(Node):
             10
         )
 
-        # Publisher
-        self.aruco_pub = self.create_publisher(ArucoDetection, '/aruco/detection', 10)
+        self.aruco_pub = self.create_publisher(ArucoMsg, '/aruco/detection', 10)
+        self.image_pub = self.create_publisher(Image, '/aruco/image', 10)
 
         self.get_logger().info(
             f'ArUco detector initialized - Dictionary: {aruco_dict_name}, '
@@ -142,28 +146,32 @@ class ArucoDetector(Node):
                 parameters=self.aruco_params
             )
 
-            # Check if any markers were detected
             if ids is not None and len(ids) > 0:
-                # Marker detected
-                # Estimate distance to the first detected marker
+                cv2.aruco.drawDetectedMarkers(cv_image, corners, ids)
                 distance = self.estimate_distance(corners[0])
 
                 if distance is not None:
-                    msg = ArucoDetection()
-                    msg.detected = True
-                    msg.distance = float(distance)
-                    self.aruco_pub.publish(msg)
+                    label = f'ID:{ids[0][0]} {distance:.2f}m'
+                    org = (int(corners[0][0][0][0]), int(corners[0][0][0][1]) - 10)
+                    cv2.putText(cv_image, label, org,
+                                cv2.FONT_HERSHEY_SIMPLEX, 0.7, (0, 255, 0), 2)
+
+                    detection_msg = ArucoMsg()
+                    detection_msg.detected = True
+                    detection_msg.distance = float(distance)
+                    self.aruco_pub.publish(detection_msg)
                     self.get_logger().debug(
                         f'ArUco marker {ids[0][0]} detected at {distance:.3f}m'
                     )
                 else:
                     self.get_logger().warn('Failed to estimate distance')
             else:
-                # No marker detected
-                msg = ArucoDetection()
-                msg.detected = False
-                msg.distance = 0.0
-                self.aruco_pub.publish(msg)
+                detection_msg = ArucoMsg()
+                detection_msg.detected = False
+                detection_msg.distance = 0.0
+                self.aruco_pub.publish(detection_msg)
+
+            self.image_pub.publish(self.bridge.cv2_to_imgmsg(cv_image, encoding='bgr8'))
 
         except Exception as e:
             self.get_logger().error(f'Error processing image: {str(e)}')

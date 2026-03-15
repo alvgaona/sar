@@ -79,6 +79,22 @@ def generate_launch_description():
         }.items(),
     )
 
+    spawn_aruco = Node(
+        package="ros_gz_sim",
+        executable="create",
+        arguments=[
+            "-name", "aruco1",
+            "-file", PathJoinSubstitution([FindPackageShare(PACKAGE_NAME), "models", "aruco1", "model.sdf"]),
+            "-x", "3.0",
+            "-y", "-2.0",
+            "-z", "0.8",
+            "-R", "0.0",
+            "-P", "0.0",
+            "-Y", "1.59",
+        ],
+        output="screen",
+    )
+
     rviz_config = PathJoinSubstitution(
         [FindPackageShare(PACKAGE_NAME), "config", "rosbot.rviz"]
     )
@@ -110,6 +126,7 @@ def generate_launch_description():
             gz_sim,
             gz_bridge,
             spawn_robot,
+            spawn_aruco,
             rviz_launch,
         ]
     )
