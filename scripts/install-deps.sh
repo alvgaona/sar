@@ -1,28 +1,30 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+DISTRO="${ROS_DISTRO:?ROS_DISTRO is not set}"
+
 apt-get update
 apt-get install -y \
   python3-pyudev \
-  ros-humble-controller-interface \
-  ros-humble-depthai-descriptions \
-  ros-humble-dynamixel-interfaces \
-  ros-humble-dynamixel-sdk \
-  ros-humble-generate-parameter-library \
-  ros-humble-image-geometry \
-  ros-humble-gz-ros2-control \
-  ros-humble-joint-state-publisher \
-  ros-humble-laser-filters \
-  ros-humble-moveit-msgs \
-  ros-humble-moveit-ros-planning \
-  ros-humble-moveit-ros-planning-interface \
-  ros-humble-moveit-servo \
-  ros-humble-nav2-costmap-2d \
-  ros-humble-nav2-msgs \
-  ros-humble-nav2-bringup \
-  ros-humble-realtime-tools \
-  ros-humble-robot-localization \
-  ros-humble-ros2-control \
-  ros-humble-realsense2-camera \
-  ros-humble-ros2-controllers \
-  ros-humble-slam-toolbox
+  ros-"${DISTRO}"-controller-interface \
+  ros-"${DISTRO}"-depthai-descriptions \
+  ros-"${DISTRO}"-dynamixel-interfaces \
+  ros-"${DISTRO}"-dynamixel-sdk \
+  ros-"${DISTRO}"-generate-parameter-library \
+  ros-"${DISTRO}"-image-geometry \
+  ros-"${DISTRO}"-gz-ros2-control \
+  ros-"${DISTRO}"-joint-state-publisher \
+  ros-"${DISTRO}"-laser-filters \
+  ros-"${DISTRO}"-moveit-msgs \
+  ros-"${DISTRO}"-moveit-ros-planning \
+  ros-"${DISTRO}"-moveit-ros-planning-interface \
+  ros-"${DISTRO}"-moveit-servo \
+  ros-"${DISTRO}"-nav2-costmap-2d \
+  ros-"${DISTRO}"-nav2-msgs \
+  ros-"${DISTRO}"-nav2-bringup \
+  ros-"${DISTRO}"-realtime-tools \
+  ros-"${DISTRO}"-robot-localization \
+  ros-"${DISTRO}"-ros2-control \
+  ros-"${DISTRO}"-realsense2-camera \
+  ros-"${DISTRO}"-ros2-controllers \
+  ros-"${DISTRO}"-slam-toolbox
