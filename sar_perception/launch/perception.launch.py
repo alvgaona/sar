@@ -1,7 +1,7 @@
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.conditions import IfCondition
-from launch.substitutions import LaunchConfiguration, PythonExpression
+from launch.substitutions import LaunchConfiguration, PythonExpression, TextSubstitution
 from launch_ros.actions import Node
 
 PACKAGE_NAME = "sar_perception"
@@ -15,6 +15,9 @@ def generate_launch_description():
     camera_fy = LaunchConfiguration("camera_fy")
     camera_cx = LaunchConfiguration("camera_cx")
     camera_cy = LaunchConfiguration("camera_cy")
+    rs_rgb_width = LaunchConfiguration("rs_rgb_width")
+    rs_rgb_height = LaunchConfiguration("rs_rgb_height")
+    rs_rgb_fps = LaunchConfiguration("rs_rgb_fps")
 
     declare_use_realsense_arg = DeclareLaunchArgument(
         "use_realsense", default_value="false", description="Launch RealSense D435i camera driver"
@@ -52,6 +55,18 @@ def generate_launch_description():
         "camera_cy", default_value="360.0", description="Camera principal point y"
     )
 
+    declare_rs_rgb_width_arg = DeclareLaunchArgument(
+        "rs_rgb_width", default_value="1280", description="RealSense RGB stream width"
+    )
+
+    declare_rs_rgb_height_arg = DeclareLaunchArgument(
+        "rs_rgb_height", default_value="720", description="RealSense RGB stream height"
+    )
+
+    declare_rs_rgb_fps_arg = DeclareLaunchArgument(
+        "rs_rgb_fps", default_value="30", description="RealSense RGB stream FPS"
+    )
+
     realsense_node = Node(
         package="realsense2_camera",
         executable="realsense2_camera_node",
@@ -63,6 +78,11 @@ def generate_launch_description():
             "enable_infra2": False,
             "enable_gyro": False,
             "enable_accel": False,
+            "rgb_camera.color_profile": [
+                rs_rgb_width, TextSubstitution(text="x"),
+                rs_rgb_height, TextSubstitution(text="x"),
+                rs_rgb_fps,
+            ],
         }],
         output="screen",
         condition=IfCondition(use_realsense),
@@ -94,6 +114,9 @@ def generate_launch_description():
             declare_camera_fy_arg,
             declare_camera_cx_arg,
             declare_camera_cy_arg,
+            declare_rs_rgb_width_arg,
+            declare_rs_rgb_height_arg,
+            declare_rs_rgb_fps_arg,
             realsense_node,
             aruco_detector,
         ]
