@@ -19,44 +19,50 @@
 
 class MotorHandler: public GearedMotor {
 public:
-	MotorHandler(unsigned char _pinPWM,unsigned char _pinDir,
+	MotorHandler(bool rev_, unsigned char _pinPWM,unsigned char _pinDir,
 					unsigned char _pinIRQ,unsigned char _pinIRQB,
 					struct ISRVars* _isr,
 					unsigned int _ratio=REDUCTION_RATIO):
-          GearedMotor(_pinPWM,_pinDir,_pinIRQ,_pinIRQB,_isr,_ratio) {}
+          GearedMotor(_pinPWM,_pinDir,_pinIRQ,_pinIRQB,_isr,_ratio), reverse(rev_) {}
 
   float getDesiredRADPS() const {
-    return (float)getGearedSpeedRPM()/radPsToRPM;
+    return (float)getGearedSpeedRPM()/radPsToRPM * (reverse)?-1:1;
   }
   float setDesiredRADPS(float radPs){
-    setGearedSpeedRPM(radPs*radPsToRPM);
+    setGearedSpeedRPM(radPs*radPsToRPM*(reverse)?-1:1);
 	  return getDesiredRADPS();
   }
   //should be the same or faster as getDesiredRADPS()
   float getMeasuredRADPS(){
     int speedRPM;
+    if(isr->pulses==lastPulses) {
+      return 0.0;
+    }
+    lastPulses = isr->pulses;
     if(getPinIRQB()!=PIN_UNDEFINED && getDesiredDir()!=getCurrDir()) {
       speedRPM=-SPEEDPPS2SPEEDRPM(isr->speedPPS);
     } else {
       speedRPM=SPEEDPPS2SPEEDRPM(isr->speedPPS);
     }
-    return (speedRPM/getRatio())/radPsToRPM;
+    return ((speedRPM/getRatio())/radPsToRPM);// * (reverse)?-1:1;
   }
 private:
 	double radPsToRPM = SEC_PER_MIN / (2*PI);
+  bool reverse = false;
+  long lastPulses;
 };
 
 irqISR(irq1,isr1);
-MotorHandler fl_wheel(W1_PWM,W1_DIR,W1_IRQ,W1_IRQB,&irq1);
+MotorHandler rl_wheel(false, W1_PWM,W1_DIR,W1_IRQ,W1_IRQB,&irq1);
 
 irqISR(irq2,isr2);
-MotorHandler rl_wheel(W2_PWM,W2_DIR,W2_IRQ,W2_IRQB,&irq2);
+MotorHandler fl_wheel(false, W2_PWM,W2_DIR,W2_IRQ,W2_IRQB,&irq2);
 
 irqISR(irq3,isr3);
-MotorHandler rr_wheel(W3_PWM,W3_DIR,W3_IRQ,W3_IRQB,&irq3);
+MotorHandler fr_wheel(true, W3_PWM,W3_DIR,W3_IRQ,W3_IRQB,&irq3);
 
 irqISR(irq4,isr4);
-MotorHandler fr_wheel(W4_PWM,W4_DIR,W4_IRQ,W4_IRQB,&irq4);
+MotorHandler rr_wheel(true, W4_PWM,W4_DIR,W4_IRQ,W4_IRQB,&irq4);
 
 void setDesiredVelocities(MotorHandler* fl,MotorHandler* rl,MotorHandler* rr,MotorHandler* fr, float flCMD, float rlCMD, float rrCMD, float frCMD){
   fl->setDesiredRADPS(flCMD);
@@ -96,7 +102,7 @@ bool PIDEnable(MotorHandler* fl,MotorHandler* rl,MotorHandler* rr,MotorHandler* 
 			fr->PIDEnable(kc,taui,taud,interval);
 }
 
-void regulatePIDs(MotorHandler* fl,MotorHandler* rl,MotorHandler* rr,MotorHandler* fr){
+bool regulatePIDs(MotorHandler* fl,MotorHandler* rl,MotorHandler* rr,MotorHandler* fr){
   return fl->PIDRegulate() && rl->PIDRegulate() && rr->PIDRegulate() && fr->PIDRegulate();
 }
 
@@ -129,13 +135,25 @@ void loop() {
       double rrCMD = data.substring(thirdComma+1,data.length()-1).toDouble();
 
       setDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel,flCMD,rlCMD,rrCMD,frCMD);
-      sendDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
+      //sendDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
+    } else if (data.startsWith("p")) {
+      fl_wheel.advancePWM(125);
+      rl_wheel.advancePWM(125);
+      rr_wheel.backoffPWM(125);
+      fr_wheel.backoffPWM(125);
+    } else if (data.startsWith("s")) {
+      fl_wheel.advancePWM(0);
+      rl_wheel.advancePWM(0);
+      rr_wheel.advancePWM(0);
+      fr_wheel.advancePWM(0);
     }
   }
 
-  if (millis()-lastChange >= SAMPLETIME || firstTime){ 
+  if (millis()-lastChange >= SAMPLETIME || firstTime) {
     lastChange = millis();
-    regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
+    //failing
+    //if (!regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel)) Serial.println("PIDs failed!");
+    //regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
     firstTime = false;
   }
 }
