@@ -34,16 +34,16 @@ public:
   }
   //should be the same or faster as getDesiredRADPS()
   float getMeasuredRADPS() {
-    int speedRPM;
+    float RADPS;
     if (micros() - isr->pulseEndMicros > 10000) { //speedPPS doesn't reset so detect that measure is stale
       return 0.0;
     }
-    if (getPinIRQB() != PIN_UNDEFINED && getDesiredDir() != getCurrDir()) {
-      speedRPM = -SPEEDPPS2SPEEDRPM(isr->speedPPS);
-    } else {
-      speedRPM = SPEEDPPS2SPEEDRPM(isr->speedPPS);
+    //CPR should be the number of ticks per revolution
+    RADPS = (isr->speedPPS/CPR)*2*PI; //(encPulses/s) * (1 rev/CPR encPulses) * (2PI rads/rev) = rads/s
+    if (getPinIRQB() != PIN_UNDEFINED && Motor::getCurrDir() == DIR_BACKOFF) {
+      RADPS = -RADPS;
     }
-    return ((speedRPM / getRatio()) / radPsToRPM);  // * (reverse)?-1:1;
+    return RADPS * (reverse)?-1:1;
   }
 private:
   double radPsToRPM = SEC_PER_MIN / (2 * PI);
@@ -129,13 +129,13 @@ void loop() {
       double rlCMD = data.substring(secondComma + 1, thirdComma).toDouble();
       double rrCMD = data.substring(thirdComma + 1, data.length()).toDouble();
 
-      //setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, flCMD, rlCMD, rrCMD, frCMD);
+      setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, flCMD, rlCMD, rrCMD, frCMD);
       // This is crap rn but the provided PID regulation doesn't work
       //map(value, fromLow, fromHigh, toLow, toHigh);
-      fl_wheel.runPWM(map(abs(flCMD), 0, 104.93, 0, 255),(flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
-      rl_wheel.runPWM(map(abs(rlCMD), 0, 104.93, 0, 255),(rlCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
-      rr_wheel.runPWM(map(abs(rrCMD), 0, 104.93, 0, 255),(rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
-      fr_wheel.runPWM(map(abs(frCMD), 0, 104.93, 0, 255),(frCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
+      // fl_wheel.runPWM(map(abs(flCMD), 0, 104.93, 0, 255),(flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rl_wheel.runPWM(map(abs(rlCMD), 0, 104.93, 0, 255),(rlCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rr_wheel.runPWM(map(abs(rrCMD), 0, 104.93, 0, 255),(rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
+      // fr_wheel.runPWM(map(abs(frCMD), 0, 104.93, 0, 255),(frCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
       //sendDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
     } else if (data.startsWith("p")) {
       fl_wheel.advancePWM(255);
@@ -150,11 +150,5 @@ void loop() {
     }
   }
 
-  // if (millis() - lastChange >= SAMPLETIME || firstTime) {
-  //   lastChange = millis();
-  //   //failing
-  //   //if (!regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel)) Serial.println("PIDs failed!");
-  //   regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
-  //   firstTime = false;
-  // }
+  regulatePIDs(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
 }
