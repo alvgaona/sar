@@ -7,49 +7,49 @@
 #define MAX_PWM 255
 #define PIN_UNDEFINED 255
 #ifdef _NAMIKI_MOTOR
-	#define	 TRIGGER CHANGE
-	#define  CPR 4	// Namiki motor
-	#define  DIR_INVERSE
-	#define  REDUCTION_RATIO 80
+#define TRIGGER CHANGE
+#define CPR 4  // Namiki motor
+#define DIR_INVERSE
+#define REDUCTION_RATIO 80
 #else
-	#define	 TRIGGER RISING
-	#define  CPR 12	// Faulhaber motor
-	#define  DIR_INVERSE !
-	#define  REDUCTION_RATIO 64
+#define TRIGGER RISING
+#define CPR 12  // Faulhaber motor
+#define DIR_INVERSE !
+#define REDUCTION_RATIO 64
 #endif
-#define  SEC_PER_MIN 60
-#define  MICROS_PER_SEC 1000000
-#define  SPEEDPPS2SPEEDRPM(freq) ((unsigned long)(freq)*(SEC_PER_MIN)/(CPR))
+#define SEC_PER_MIN 60
+#define MICROS_PER_SEC 1000000
+#define SPEEDPPS2SPEEDRPM(freq) ((unsigned long)(freq) * (SEC_PER_MIN) / (CPR))
 
-#define irqISR(y,x) \
-    void x(); \
-    struct ISRVars y={x}; \
-    void x() { \
-        static bool first_pulse=true; \
-        y.pulseEndMicros=micros(); \
-        if(first_pulse==false && y.pulseEndMicros>y.pulseStartMicros) { \
-            y.speedPPS=MICROS_PER_SEC/(y.pulseEndMicros-y.pulseStartMicros); \
-			/* y.accPPSS=(y.speedPPS-y.lastSpeedPPS)*y.speedPPS; */ \
-        } else first_pulse=false; \
-        y.pulseStartMicros=y.pulseEndMicros; \
-		/* y.lastSpeedPPS=y.speedPPS; */ \
-		if(y.pinIRQB!=PIN_UNDEFINED) \
-			y.currDirection=DIR_INVERSE(digitalRead(y.pinIRQ)^digitalRead(y.pinIRQB)); \
-		y.currDirection==DIR_ADVANCE?++y.pulses:--y.pulses; \
-    } 
+#define irqISR(y, x) \
+  void x(); \
+  struct ISRVars y = { x }; \
+  void x() { \
+    static bool first_pulse = true; \
+    y.pulseEndMicros = micros(); \
+    if (first_pulse == false && y.pulseEndMicros > y.pulseStartMicros) { \
+      y.speedPPS = MICROS_PER_SEC / (y.pulseEndMicros - y.pulseStartMicros); \
+      /* y.accPPSS=(y.speedPPS-y.lastSpeedPPS)*y.speedPPS; */ \
+    } else first_pulse = false; \
+    y.pulseStartMicros = y.pulseEndMicros; \
+    /* y.lastSpeedPPS=y.speedPPS; */ \
+    if (y.pinIRQB != PIN_UNDEFINED) \
+      y.currDirection = DIR_INVERSE(digitalRead(y.pinIRQ) ^ digitalRead(y.pinIRQB)); \
+    y.currDirection == DIR_ADVANCE ? ++y.pulses : --y.pulses; \
+  }
 
 struct ISRVars {
-	void (*ISRfunc)();
-	//volatile unsigned long pulses;
-	volatile long pulses;	// 201104, direction sensitive
-	volatile unsigned long pulseStartMicros;
-	volatile unsigned long pulseEndMicros;
-	volatile unsigned int  speedPPS;
-	//volatile unsigned int  lastSpeedPPS;
-	//volatile int accPPSS;	// acceleration, Pulse Per Sec^2
-	volatile bool currDirection;
-	unsigned char pinIRQB;
-	unsigned char pinIRQ;	// pinIRQA 201207
+  void (*ISRfunc)();
+  //volatile unsigned long pulses;
+  volatile long pulses;  // 201104, direction sensitive
+  volatile unsigned long pulseStartMicros;
+  volatile unsigned long pulseEndMicros;
+  volatile unsigned int speedPPS;
+  //volatile unsigned int  lastSpeedPPS;
+  //volatile int accPPSS;	// acceleration, Pulse Per Sec^2
+  volatile bool currDirection;
+  unsigned char pinIRQB;
+  unsigned char pinIRQ;  // pinIRQA 201207
 };
 
 #define W1_PWM 3
@@ -74,47 +74,48 @@ public:
   MotorHandler(bool rev_, unsigned char _pinPWM, unsigned char _pinDir,
                unsigned char _pinIRQ, unsigned char _pinIRQB,
                struct ISRVars* _isr)
-    : pinPWM(_pinPWM), pinDir(_pinDir), isr(_isr), reverse(rev_), wheelPID(&measuredRADPS, &PIDOut, &desiredRADPS, 0.31, 0.01, 0.0, DIRECT)  {
+    : pinPWM(_pinPWM), pinDir(_pinDir), isr(_isr), reverse(rev_), wheelPID(&measuredRADPS, &PIDOut, &desiredRADPS, 0.31, 0.01, 0.0, DIRECT) {
 
-    isr->pinIRQ=_pinIRQ;
-    isr->pinIRQB=_pinIRQB;
+    isr->pinIRQ = _pinIRQ;
+    isr->pinIRQB = _pinIRQB;
 
-    pinMode(pinPWM,OUTPUT);
-    pinMode(pinDir,OUTPUT);
-    pinMode(isr->pinIRQ,INPUT);
+    pinMode(pinPWM, OUTPUT);
+    pinMode(pinDir, OUTPUT);
+    pinMode(isr->pinIRQ, INPUT);
 
-    if(isr->pinIRQB!=PIN_UNDEFINED) {
-      pinMode(isr->pinIRQB,INPUT);
+    if (isr->pinIRQB != PIN_UNDEFINED) {
+      pinMode(isr->pinIRQB, INPUT);
     }
 
-    if(isr->pinIRQ==2 || isr->pinIRQ==3) attachInterrupt(isr->pinIRQ-2,isr->ISRfunc,TRIGGER);
+    if (isr->pinIRQ == 2 || isr->pinIRQ == 3) attachInterrupt(isr->pinIRQ - 2, isr->ISRfunc, TRIGGER);
     else {
-      PCattachInterrupt(isr->pinIRQ,isr->ISRfunc,TRIGGER);	// RISING --> CHANGE 201207
+      PCattachInterrupt(isr->pinIRQ, isr->ISRfunc, TRIGGER);  // RISING --> CHANGE 201207
     }
 
     wheelPID.SetMode(AUTOMATIC);
+    wheelPID.SetOutputLimits(-MAX_PWM, MAX_PWM);
   }
 
   double getDesiredRADPS() const {
-    //return (float)GearedMotor::getGearedSpeedRPM() / radPsToRPM * (reverse) ? -1 : 1;
+    //return (float)GearedMotor::getGearedSpeedRPM() / radPsToRPM * ((reverse) ? -1 : 1);
     return desiredRADPS;
   }
   double setDesiredRADPS(float radPs) {
-    //GearedMotor::setGearedSpeedRPM(radPs * radPsToRPM * (reverse) ? -1 : 1);
+    //GearedMotor::setGearedSpeedRPM(radPs * radPsToRPM * ((reverse) ? -1 : 1));
     desiredRADPS = radPs;
     return getDesiredRADPS();
   }
   //should be the same or faster as getDesiredRADPS()
   double getMeasuredRADPS() {
     //CPR should be the number of ticks per revolution
-    float RADPS = (isr->speedPPS / CPR) * 2 * PI;  //(encPulses/s) * (1 rev/CPR encPulses) * (2PI rads/rev) = rads/s
+    float RADPS = (isr->speedPPS / (double)CPR) * 2 * PI;  //(encPulses/s) * (1 rev/CPR encPulses) * (2PI rads/rev) = rads/s
     // if (micros() - isr->pulseEndMicros > 10000) {  //speedPPS doesn't reset so detect if measure is stale
     //   return 0.0;
     // }
     if (isr->pinIRQB != PIN_UNDEFINED && getCurrDir() == DIR_BACKOFF) {
       RADPS = -RADPS;
     }
-    measuredRADPS = RADPS * (reverse) ? -1 : 1;
+    measuredRADPS = RADPS * ((reverse) ? -1 : 1);
     return measuredRADPS;
   }
   long getPulseCount() {
@@ -131,14 +132,17 @@ public:
     wheelPID.SetTunings(Kp, Ki, Kd);
   }
   bool Compute() {
-    if(wheelPID.Compute()) { //new output
-      bool dir = (reverse) ? !(PIDOut >= 0):(PIDOut >= 0);
+    getMeasuredRADPS();
+    if (wheelPID.Compute()) {  //new output  * ((reverse) ? -1 : 1)
+      bool dir = ((reverse) ? !(PIDOut >= 0) : (PIDOut >= 0));
       double processedOut = (abs(PIDOut) <= MAX_PWM) ? abs(PIDOut) : MAX_PWM;
       analogWrite(pinPWM, processedOut);
       digitalWrite(pinDir, (dir) ? DIR_ADVANCE : DIR_BACKOFF);
       //Serial.print("Running ");Serial.println(processedOut);
       return true;
-    } else {return false;}
+    } else {
+      return false;
+    }
   }
   double PIDOut;
 private:
@@ -196,11 +200,17 @@ size_t sendDesiredVelocities(MotorHandler* fl, MotorHandler* rl, MotorHandler* r
 }
 
 void PIDSet(MotorHandler* fl, MotorHandler* rl, MotorHandler* rr, MotorHandler* fr, float Kp, float Ki, float Kd, int sampleMs = 20) {
-  fl->PIDSet(Kp, Ki, Kd, sampleMs);rl->PIDSet(Kp, Ki, Kd, sampleMs);rr->PIDSet(Kp, Ki, Kd, sampleMs);fr->PIDSet(Kp, Ki, Kd, sampleMs);
+  fl->PIDSet(Kp, Ki, Kd, sampleMs);
+  rl->PIDSet(Kp, Ki, Kd, sampleMs);
+  rr->PIDSet(Kp, Ki, Kd, sampleMs);
+  fr->PIDSet(Kp, Ki, Kd, sampleMs);
 }
 
-bool ComputePIDs(MotorHandler* fl, MotorHandler* rl, MotorHandler* rr, MotorHandler* fr) {
-  fl->Compute();rl->Compute();rr->Compute();fr->Compute();
+void ComputePIDs(MotorHandler* fl, MotorHandler* rl, MotorHandler* rr, MotorHandler* fr) {
+  fl->Compute();
+  rl->Compute();
+  rr->Compute();
+  fr->Compute();
 }
 
 void setup() {
@@ -209,10 +219,8 @@ void setup() {
 
   Serial.begin(115200);
 
-  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 2,5,1, 20);
+  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 2, 5, 1, 20);
 }
-bool firstTime = true;
-unsigned long lastChange = millis();
 
 void loop() {
   if (Serial.available() > 0) {
@@ -235,6 +243,8 @@ void loop() {
       //sendDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
     } else if (data.startsWith("p")) {
       setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, PI, PI, PI, PI);
+    } else if (data.startsWith("o")) {
+      setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, -PI, -PI, -PI, -PI);
     } else if (data.startsWith("s")) {
       setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 0, 0, 0, 0);
     } else if (data.startsWith("z")) {
