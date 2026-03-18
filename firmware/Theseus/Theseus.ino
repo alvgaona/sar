@@ -17,6 +17,7 @@
 #define DIR_INVERSE !
 #define REDUCTION_RATIO 64
 #endif
+#define PULSESPREV 157
 #define SEC_PER_MIN 60
 #define MICROS_PER_SEC 1000000
 #define SPEEDPPS2SPEEDRPM(freq) ((unsigned long)(freq) * (SEC_PER_MIN) / (CPR))
@@ -54,20 +55,20 @@ struct ISRVars {
 
 #define W1_PWM 3
 #define W1_DIR 2
-#define W1_IRQ 4
-#define W1_IRQB 5
+#define W1_IRQ 14 //4
+#define W1_IRQB 15 //5
 #define W2_PWM 11
 #define W2_DIR 12
-#define W2_IRQ 14
-#define W2_IRQB 15
+#define W2_IRQ 4 //14
+#define W2_IRQB 5 //15
 #define W3_PWM 9
 #define W3_DIR 8
-#define W3_IRQ 16
-#define W3_IRQB 17
+#define W3_IRQ 18 //16
+#define W3_IRQB 19 //17
 #define W4_PWM 10
 #define W4_DIR 7
-#define W4_IRQ 18
-#define W4_IRQB 19
+#define W4_IRQ 16 //18
+#define W4_IRQB 17 //19
 
 class MotorHandler {
 public:
@@ -78,9 +79,6 @@ public:
 
     isr->pinIRQ = _pinIRQ;
     isr->pinIRQB = _pinIRQB;
-
-    wheelPID.SetMode(AUTOMATIC);
-    wheelPID.SetOutputLimits(-MAX_PWM, MAX_PWM);
   }
 
   void setup() {
@@ -96,6 +94,9 @@ public:
     else {
       PCattachInterrupt(isr->pinIRQ, isr->ISRfunc, TRIGGER);  // RISING --> CHANGE 201207
     }
+
+    wheelPID.SetMode(AUTOMATIC);
+    wheelPID.SetOutputLimits(-MAX_PWM, MAX_PWM);
   }
 
   double getDesiredRADPS() const {
@@ -112,15 +113,25 @@ public:
       return 0.0;
     }
     //CPR should be the number of ticks per revolution
-    double RADPS = (isr->speedPPS / (double)CPR) * 2 * PI;  //(encPulses/s) * (1 rev/CPR encPulses) * (2PI rads/rev) = rads/s
-    if (getCurrDir() == DIR_BACKOFF) {
+    double RADPS = (isr->speedPPS / (double)PULSESPREV) * 2 * PI;  //(encPulses/s) * (1 rev/PULSESPREV encPulses) * (2PI rads/rev) = rads/s
+    if (getCurrDir() == ((reverse) ? DIR_ADVANCE : DIR_BACKOFF)) {
       RADPS = -RADPS;
     }
-    if (reverse) {
-      RADPS = -RADPS;
-    }
+    // if (reverse) {
+    //   RADPS = -RADPS;
+    // }
     measuredRADPS = RADPS;
     return measuredRADPS;
+  }
+  double getMeasuredRPS() {                      //WORKING but left side reports the other way around
+    if (micros() - isr->pulseEndMicros > 10000) {  //speedPPS doesn't reset so detect if measure is stale
+      return 0.0;
+    }
+    double RPS = (isr->speedPPS / (double)PULSESPREV);  //(encPulses/s) * (1 rev/PULSESPREV encPulses) = rev/s
+    if (getCurrDir() == ((reverse) ? DIR_ADVANCE : DIR_BACKOFF)) {
+      RPS = -RPS;
+    }
+    return RPS;
   }
   volatile long getPulseCount() {
     return isr->pulses;
@@ -137,17 +148,36 @@ public:
   }
   bool Compute() {
     getMeasuredRADPS();
-    if (wheelPID.Compute()) {    //new output
-      bool dir = (PIDOut >= 0);  //((reverse) ? !(PIDOut >= 0) : (PIDOut >= 0));
+    if (wheelPID.Compute()) {    //new output (flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF (rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF
+      // bool dir = ((reverse) ? (PIDOut >= 0) : !(PIDOut >= 0));
+      bool dir;
+      if (reverse) {
+        dir = (PIDOut>=0)?DIR_ADVANCE:DIR_BACKOFF;
+      } else {
+        dir = (PIDOut<0)?DIR_ADVANCE:DIR_BACKOFF;
+      }
       double processedOut = (abs(PIDOut) <= MAX_PWM) ? abs(PIDOut) : MAX_PWM;
       analogWrite(pinPWM, processedOut);
-      digitalWrite(pinDir, (dir) ? DIR_ADVANCE : DIR_BACKOFF);
+      digitalWrite(pinDir, dir);
+      // fl_wheel.runPWM(flCMD,(flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rl_wheel.runPWM(rlCMD,(rlCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rr_wheel.runPWM(rrCMD,(rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
+      // fr_wheel.runPWM(frCMD,(frCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
       //Serial.print("Running ");Serial.println(processedOut);
       return true;
     } else {
       return false;
     }
   }
+  void reportPID() {
+    Serial.print("Measured:");Serial.print(measuredRADPS);Serial.print("; Desired:");Serial.print(desiredRADPS);Serial.print("; PIDOut:");Serial.println(PIDOut);
+  }
+  unsigned int runPWM(unsigned int PWM,bool dir) {
+    analogWrite(pinPWM,PWM);
+    digitalWrite(pinDir,dir);
+    return PWM;
+  }
+
   double PIDOut;
 private:
   //double radPsToRPM = SEC_PER_MIN / (2 * PI);
@@ -228,7 +258,7 @@ void setup() {
   rr_wheel.setup();
   fr_wheel.setup();
 
-  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 2, 5, 1, 20);
+  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 30, 2, 0.01, 20);
 }
 
 void loop() {
@@ -250,6 +280,10 @@ void loop() {
 
       setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, flCMD, rlCMD, rrCMD, frCMD);
       //sendDesiredVelocities(&fl_wheel,&rl_wheel,&rr_wheel,&fr_wheel);
+      // fl_wheel.runPWM(flCMD,(flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rl_wheel.runPWM(rlCMD,(rlCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
+      // rr_wheel.runPWM(rrCMD,(rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
+      // fr_wheel.runPWM(frCMD,(frCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
     } else if (data.startsWith("p")) {
       setDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 0, PI, 0, 0);
     } else if (data.startsWith("o")) {
@@ -268,8 +302,13 @@ void loop() {
       if (rl_wheel.getCurrDir() == DIR_BACKOFF) {
         Serial.println("Inverting");
       } else Serial.println("Not Inverting");
+    } else if (data.startsWith("5")) {
+      fl_wheel.runPWM(255, DIR_ADVANCE);
+      //Serial.println(rl_wheel.getMeasuredRPS());
     }
   }
-
+  //Serial.print("MeasuredRADPS:");Serial.print()
   ComputePIDs(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel);
+  //fl_wheel.getMeasuredRADPS();
+  //fl_wheel.reportPID();
 }
