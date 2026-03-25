@@ -41,16 +41,13 @@
 
 struct ISRVars {
   void (*ISRfunc)();
-  //volatile unsigned long pulses;
-  volatile long pulses;  // 201104, direction sensitive
+  volatile long pulses;
   volatile unsigned long pulseStartMicros;
   volatile unsigned long pulseEndMicros;
   volatile unsigned int speedPPS;
-  //volatile unsigned int  lastSpeedPPS;
-  //volatile int accPPSS;	// acceleration, Pulse Per Sec^2
   volatile bool currDirection;
   unsigned char pinIRQB;
-  unsigned char pinIRQ;  // pinIRQA 201207
+  unsigned char pinIRQ;
 };
 
 #define W1_PWM 3
@@ -100,30 +97,27 @@ public:
   }
 
   double getDesiredRADPS() const {
-    //return (float)GearedMotor::getGearedSpeedRPM() / radPsToRPM * ((reverse) ? -1 : 1);
     return desiredRADPS;
   }
   double setDesiredRADPS(float radPs) {
-    //GearedMotor::setGearedSpeedRPM(radPs * radPsToRPM * ((reverse) ? -1 : 1));
     desiredRADPS = radPs;
     return getDesiredRADPS();
   }
-  double getMeasuredRADPS() {                      //WORKING but left side reports the other way around
+  double getMeasuredRADPS() {
     if (micros() - isr->pulseEndMicros > 10000) {  //speedPPS doesn't reset so detect if measure is stale
-      return 0.0;
+      measuredRADPS = 0.0;
+      return measuredRADPS;
     }
-    //CPR should be the number of ticks per revolution
     double RADPS = (isr->speedPPS / (double)PULSESPREV) * 2 * PI;  //(encPulses/s) * (1 rev/PULSESPREV encPulses) * (2PI rads/rev) = rads/s
+    //if (abs(RADPS) < 0.001) return 0;
+
     if (getCurrDir() == ((reverse) ? DIR_ADVANCE : DIR_BACKOFF)) {
       RADPS = -RADPS;
     }
-    // if (reverse) {
-    //   RADPS = -RADPS;
-    // }
     measuredRADPS = RADPS;
     return measuredRADPS;
   }
-  double getMeasuredRPS() {                      //WORKING but left side reports the other way around
+  double getMeasuredRPS() {
     if (micros() - isr->pulseEndMicros > 10000) {  //speedPPS doesn't reset so detect if measure is stale
       return 0.0;
     }
@@ -149,7 +143,6 @@ public:
   bool Compute() {
     getMeasuredRADPS();
     if (wheelPID.Compute()) {    //new output (flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF (rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF
-      // bool dir = ((reverse) ? (PIDOut >= 0) : !(PIDOut >= 0));
       bool dir;
       if (reverse) {
         dir = (PIDOut>=0)?DIR_ADVANCE:DIR_BACKOFF;
@@ -159,11 +152,6 @@ public:
       double processedOut = (abs(PIDOut) <= MAX_PWM) ? abs(PIDOut) : MAX_PWM;
       analogWrite(pinPWM, processedOut);
       digitalWrite(pinDir, dir);
-      // fl_wheel.runPWM(flCMD,(flCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
-      // rl_wheel.runPWM(rlCMD,(rlCMD>=0)?DIR_ADVANCE:DIR_BACKOFF);
-      // rr_wheel.runPWM(rrCMD,(rrCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
-      // fr_wheel.runPWM(frCMD,(frCMD<0)?DIR_ADVANCE:DIR_BACKOFF);
-      //Serial.print("Running ");Serial.println(processedOut);
       return true;
     } else {
       return false;
@@ -180,7 +168,6 @@ public:
 
   double PIDOut;
 private:
-  //double radPsToRPM = SEC_PER_MIN / (2 * PI);
   struct ISRVars* isr;
   unsigned char pinPWM;
   unsigned char pinDir;
@@ -208,7 +195,7 @@ void setDesiredVelocities(MotorHandler* fl, MotorHandler* rl, MotorHandler* rr, 
   rr->setDesiredRADPS(rrCMD);
   fr->setDesiredRADPS(frCMD);
 }
-//should be the same as sendDesiredVelocities()
+
 size_t sendEncoderVelocities(MotorHandler* fl, MotorHandler* rl, MotorHandler* rr, MotorHandler* fr) {
   size_t count = Serial.print("e:");
   count += Serial.print(fl->getMeasuredRADPS());
@@ -258,7 +245,7 @@ void setup() {
   rr_wheel.setup();
   fr_wheel.setup();
 
-  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 30, 2, 0.01, 20);
+  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 30, 5, 0.01, 20);
 }
 
 void loop() {
@@ -293,11 +280,11 @@ void loop() {
     } else if (data.startsWith("z")) {
       sendDesiredVelocities(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel);
     } else if (data.startsWith("1")) {
-      Serial.println(rl_wheel.getPulseCount());
+      Serial.print("pulses: ");Serial.println(rl_wheel.getPulseCount());
     } else if (data.startsWith("2")) {
-      Serial.println(rl_wheel.getSpeedPPS());
+      Serial.print("speedPPS: ");Serial.println(rl_wheel.getSpeedPPS());
     } else if (data.startsWith("3")) {
-      Serial.println(rl_wheel.PIDOut);
+      Serial.print("PIDOut: ");Serial.println(rl_wheel.PIDOut);
     } else if (data.startsWith("4")) {
       if (rl_wheel.getCurrDir() == DIR_BACKOFF) {
         Serial.println("Inverting");
