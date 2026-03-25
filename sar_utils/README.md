@@ -38,7 +38,7 @@ The `sar_utils` package provides utility tools and configurations for the SAR (S
 To launch the joystick teleoperation:
 
 ```bash
-ros2 launch sar_utils joystick.launch.py cmd_vel_topic:=/cmd_vel stamped:=false
+ros2 launch sar_utils joystick.launch.py cmd_vel_topic:=/mecanum_drive_controller/cmd_vel stamped:=true
 ```
 
 - `cmd_vel_topic`: The topic to publish velocity commands (default: `/cmd_vel`)
