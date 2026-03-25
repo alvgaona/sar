@@ -24,7 +24,7 @@
   <xacro:wheel side="rr" wheel_radius="${wheel_radius}"
     x="${-wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
 
-  <xacro:rplidar x="0.0" y="0.0" z="0.03"/>
+  <!--<xacro:rplidar x="0.0" y="0.0" z="0.03"/>-->
   
   <xacro:sar_ros2_control mock="$(arg mock)" baud_rate="$(arg baud_rate)" device="$(arg device)" />
 
