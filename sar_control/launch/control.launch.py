@@ -92,7 +92,7 @@ def generate_launch_description():
             ),
             DeclareLaunchArgument(
                 "device",
-                default_value="/dev/ttyACM0",
+                default_value="/dev/arduClone",
                 description="Device path for the serial connection",
             ),
             controller_manager,

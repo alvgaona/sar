@@ -22,8 +22,9 @@ To get the serial device name of your board, use this command:
 readlink -e /dev/serial/by-id/*Arduino*
 ```
 
-If it's different than `/dev/ttyACM0`, append `device:=${yourDeviceNameHere}` to the launch call.
-<!-- Maybe a udev rule would be nice -->
+If you use the same Arduino clone as us, there's a udev rule in the repositorie's script folder. This makes it so the board is always accessible as `/dev/arduClone`.
+
+If it's different than `/dev/arduClone`, append `device:=${yourDeviceNameHere}` to the launch call.
 
 Before flashing the software onto the board, it needs to be writable, so use this command:
 
