@@ -245,7 +245,7 @@ void setup() {
   rr_wheel.setup();
   fr_wheel.setup();
 
-  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 30, 5, 0.01, 20);
+  PIDSet(&fl_wheel, &rl_wheel, &rr_wheel, &fr_wheel, 20, 40, 0.01, 20);
 }
 
 void loop() {
