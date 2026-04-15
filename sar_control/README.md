@@ -16,7 +16,7 @@ pixi run build-pkg sar_control
 
 ## Arduino configuration (Linux / Raspberry Pi)
 
-To get the serial device name of your board, use this command:
+To get the serial device name of a real Arduino board, use this command:
 
 ```bash
 readlink -e /dev/serial/by-id/*Arduino*
@@ -30,6 +30,10 @@ Before flashing the software onto the board, it needs to be writable, so use thi
 
 ```bash
 sudo chmod a+rw $(readlink -enq /dev/serial/by-id/*Arduino*)
+```
+or
+```bash
+sudo chmod a+rw /dev/arduClone
 ```
 
 ## Test (macOS)
