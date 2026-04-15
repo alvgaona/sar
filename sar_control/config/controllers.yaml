@@ -17,8 +17,8 @@ mecanum_drive_controller:
     rear_left_wheel_name: "rl_wheel_joint"
     rear_right_wheel_name: "rr_wheel_joint"
     # TODO: check these values against the actual robot dimensions and update as needed
-    wheel_separation_x: 0.180 # 240mm total length minus 30mm wheel radius on each side
-    wheel_separation_y: 0.178 # 240mm total, wheel thickness is 31mm on each side
+    wheel_separation_x: 0.138 # 240mm total length minus 30mm wheel radius on each side
+    wheel_separation_y: 0.187 # 240mm total, wheel thickness is 31mm on each side
     wheel_radius: 0.03 # 60mm diameter wheels
     position_feedback: false
     # cmd_vel_timeout: 0.5
