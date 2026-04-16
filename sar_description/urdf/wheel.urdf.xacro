@@ -17,10 +17,11 @@
 
     <link name="${side}_wheel_link">
       <visual>
-        <geometry>
-          <cylinder radius="${wheel_radius}" length="${wheel_thickness}" />
-        </geometry>
-        <origin xyz="0.0 0.0 0.0" rpy="${pi/2} 0.0 0.0" />
+      <geometry>
+        <mesh filename="package://sar_description/meshes/WHEEL.dae"
+              scale="0.0011 0.0011 0.0011"/>
+      </geometry>
+        <origin xyz="-0.07 -0.015 -0.022" rpy="0.0 0.0 ${pi/2}" />
         <material name="wheel_color">
           <color rgba="0.1 0.1 0.1 1.0" />
         </material>

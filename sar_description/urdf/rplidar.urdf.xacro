@@ -4,16 +4,16 @@
   <xacro:macro name="rplidar" params="x y z">
     <joint name="rplidar_joint" type="fixed">
       <parent link="body_link" />
-      <child link="rplidar_link" />
+      <child link="laser_frame" />
       <origin xyz="${x} ${y} ${z}" rpy="0.0 0.0 0.0" />
     </joint>
 
-    <link name="rplidar_link">
+    <link name="laser_frame">
       <visual>
         <geometry>
-          <mesh filename="file://$(find sar_description)/meshes/rplidar_main.STL" scale="0.002 0.002 0.002" />
+          <mesh filename="package://sar_robot_description/meshes/RPLIDAR.dae" scale="0.001 0.001 0.001"/>
         </geometry>
-        <origin xyz="-0.07 0.067 0.0" rpy="${pi/2} 0.0 0.0" />
+        <origin xyz="-0.07 0.015 -0.036" rpy="0 0.0 ${pi}" />
         <material name="rplidar_color">
           <color rgba="0.1 0.1 0.1 1.0" />
         </material>

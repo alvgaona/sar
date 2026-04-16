@@ -4,22 +4,29 @@
   <xacro:macro name="body" params="wheel_radius">
 
     <link name="base_link" />
+    
+    <link name="base_footprint" />
+    
+    <joint name="base_to_footprint" type="fixed">
+      <origin xyz="0 0 0" rpy="0.0 0.0 0.0" />1
+      <parent link="base_link" />
+      <child link="base_footprint" />
+    </joint>
 
     <joint name="base_to_body_joint" type="fixed">
-      <origin xyz="0.0 0.0 ${wheel_radius}" rpy="0.0 0.0 0.0" />
+      <origin xyz="0 0 ${wheel_radius}" rpy="0.0 0.0 0.0" />
       <parent link="base_link" />
       <child link="body_link" />
     </joint>
 
     <link name="body_link">
-      <visual>
-        <geometry>
-          <box size="0.240 0.178 0.060" />
-        </geometry>
-        <material name="dark_grey">
-          <color rgba="0.3 0.3 0.3 1.0" />
-        </material>
-      </visual>
+    <visual name="base_visual">
+      <origin xyz="0.115 -0.0875 0" rpy="0 0 0"/>
+      <geometry>
+        <mesh filename="package://sar_robot_description/meshes/SAR2.dae"
+              scale="0.001 0.001 0.001"/>
+      </geometry>
+    </visual>
 
       <collision>
         <geometry>
