@@ -1,13 +1,13 @@
 slam:
-  enabled: true
+  enabled: enable
   params_file: ""
 
 exploration:
-  enabled: true
+  enabled: false
   params_file: ""
 
 perception:
-  enabled: true
+  enabled: false
   marker_size: 0.75
   aruco_dict: "DICT_6X6_1000"
   image_topic: "/oak/rgb/color"

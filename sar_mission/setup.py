@@ -24,6 +24,9 @@ setup(
     entry_points={
         'console_scripts': [
             'explore_and_detect = sar_mission.explore_and_detect:main',
+            'sweep_and_detect = sar_mission.sweep_and_detect:main',
+            'search_and_detect = sar_mission.search_and_detect:main',
+            'search_and_rescue = sar_mission.search_and_rescue:main',
         ],
     },
 )
