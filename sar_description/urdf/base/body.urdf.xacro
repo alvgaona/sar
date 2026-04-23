@@ -23,7 +23,7 @@
     <visual name="base_visual">
       <origin xyz="0.115 -0.0875 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://sar_description/meshes/SAR2.dae"
+        <mesh filename="package://sar_description/meshes/sar_body.dae"
               scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>

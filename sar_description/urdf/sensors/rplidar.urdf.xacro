@@ -11,7 +11,7 @@
     <link name="laser_frame">
       <visual>
         <geometry>
-          <mesh filename="package://sar_description/meshes/RPLIDAR.dae" scale="0.001 0.001 0.001"/>
+          <mesh filename="package://sar_description/meshes/rplidar.dae" scale="0.001 0.001 0.001"/>
         </geometry>
         <origin xyz="-0.07 0.015 -0.036" rpy="0 0.0 ${pi}" />
         <material name="rplidar_color">
