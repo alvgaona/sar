@@ -19,9 +19,18 @@ DEFAULT_SPAWN = {"x": "0.0", "y": "0.0", "z": "0.2", "yaw": "0.0"}
 
 ARUCO_ENABLED_WORLDS = {"husarion_world"}
 
+SUPPORTED_ROBOTS = {"rosbot", "sar"}
+
 
 def resolve_world_name(context):
     return LaunchConfiguration("world").perform(context)
+
+
+def resolve_robot(context):
+    robot = LaunchConfiguration("robot").perform(context)
+    if robot not in SUPPORTED_ROBOTS:
+        raise ValueError(f"Unsupported robot '{robot}'. Choose one of {sorted(SUPPORTED_ROBOTS)}.")
+    return robot
 
 
 def resolve_world_path(context):
@@ -59,6 +68,13 @@ def generate_launch_description():
             "World to load. Either a preset name (e.g. 'husarion_world', 'husarion_office', "
             "'sonoma_raceway', 'empty_with_plugins', 'office') or an absolute path to an SDF file."
         ),
+    )
+
+    declare_robot_arg = DeclareLaunchArgument(
+        "robot",
+        default_value="rosbot",
+        description="Which robot to spawn: 'rosbot' (Husarion ROSbot XL) or 'sar' (custom SAR platform).",
+        choices=sorted(SUPPORTED_ROBOTS),
     )
 
     declare_x_arg = DeclareLaunchArgument("x", default_value="", description="Robot spawn X (override).")
@@ -102,38 +118,101 @@ def generate_launch_description():
 
     gz_sim = OpaqueFunction(function=gz_sim_setup)
 
-    gz_bridge_config = PathJoinSubstitution(
-        [FindPackageShare("rosbot_gazebo"), "config", "gz_bridge.yaml"]
-    )
-    gz_bridge = Node(
-        package="ros_gz_bridge",
-        executable="parameter_bridge",
-        name="gz_bridge",
-        parameters=[{"config_file": gz_bridge_config}],
-    )
+    def gz_bridge_setup(context):
+        robot = resolve_robot(context)
+        if robot == "sar":
+            config = os.path.join(
+                get_package_share_directory(PACKAGE_NAME), "config", "gz_bridge.yaml"
+            )
+        else:
+            config = os.path.join(
+                get_package_share_directory("rosbot_gazebo"), "config", "gz_bridge.yaml"
+            )
+        return [
+            Node(
+                package="ros_gz_bridge",
+                executable="parameter_bridge",
+                name="gz_bridge",
+                parameters=[{"config_file": config}],
+            )
+        ]
+
+    gz_bridge = OpaqueFunction(function=gz_bridge_setup)
 
     def spawn_robot_setup(context):
+        robot = resolve_robot(context)
         spawn = resolve_spawn(context)
+
+        if robot == "rosbot":
+            return [
+                IncludeLaunchDescription(
+                    PythonLaunchDescriptionSource(
+                        PathJoinSubstitution(
+                            [
+                                FindPackageShare("rosbot_gazebo"),
+                                "launch",
+                                "spawn_robot.launch.py",
+                            ]
+                        )
+                    ),
+                    launch_arguments={
+                        "robot_model": "rosbot_xl",
+                        "configuration": "autonomy",
+                        "x": spawn["x"],
+                        "y": spawn["y"],
+                        "z": spawn["z"],
+                        "yaw": spawn["yaw"],
+                    }.items(),
+                )
+            ]
+
+        description_launch = IncludeLaunchDescription(
+            PythonLaunchDescriptionSource(
+                PathJoinSubstitution(
+                    [FindPackageShare("sar_description"), "launch", "description.launch.py"]
+                )
+            ),
+            launch_arguments={"use_sim": "true"}.items(),
+        )
+
+        spawn_entity = Node(
+            package="ros_gz_sim",
+            executable="create",
+            name="spawn_sar",
+            arguments=[
+                "-name", "sar_robot",
+                "-topic", "robot_description",
+                "-x", spawn["x"],
+                "-y", spawn["y"],
+                "-z", spawn["z"],
+                "-Y", spawn["yaw"],
+            ],
+            output="screen",
+        )
+
+        controllers_config = os.path.join(
+            get_package_share_directory("sar_control"), "config", "controllers.yaml"
+        )
+
+        spawn_joint_state_broadcaster = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["joint_state_broadcaster", "--param-file", controllers_config],
+            output="screen",
+        )
+
+        spawn_drive_controller = Node(
+            package="controller_manager",
+            executable="spawner",
+            arguments=["mecanum_drive_controller", "--param-file", controllers_config],
+            output="screen",
+        )
+
         return [
-            IncludeLaunchDescription(
-                PythonLaunchDescriptionSource(
-                    PathJoinSubstitution(
-                        [
-                            FindPackageShare("rosbot_gazebo"),
-                            "launch",
-                            "spawn_robot.launch.py",
-                        ]
-                    )
-                ),
-                launch_arguments={
-                    "robot_model": "rosbot_xl",
-                    "configuration": "autonomy",
-                    "x": spawn["x"],
-                    "y": spawn["y"],
-                    "z": spawn["z"],
-                    "yaw": spawn["yaw"],
-                }.items(),
-            )
+            description_launch,
+            spawn_entity,
+            spawn_joint_state_broadcaster,
+            spawn_drive_controller,
         ]
 
     spawn_robot = OpaqueFunction(function=spawn_robot_setup)
@@ -187,6 +266,7 @@ def generate_launch_description():
         [
             declare_rviz_arg,
             declare_world_arg,
+            declare_robot_arg,
             declare_x_arg,
             declare_y_arg,
             declare_z_arg,
