@@ -36,7 +36,6 @@ ros-humble-laser-filters = ">=2.0.9,<3"
 
 [dependencies]
 colcon-common-extensions = ">=0.3.0,<0.4"
-librerun-sdk = ">=0.30.1,<0.31"
 pyudev = ">=0.24.3,<0.25"
 ninja = ">=1.13.2,<2"
 
