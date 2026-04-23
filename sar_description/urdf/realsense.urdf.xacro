@@ -25,6 +25,12 @@
         <box size="0.09 0.03 0.03"/>
       </geometry>
     </collision>
+    <inertial>
+		<mass value="0.048" />
+		<inertia ixx="0.000007287" ixy="0.000000001" ixz="-0.0"
+		                          iyy="0.000030308" iyz="0.000000021"
+		                                           izz="0.000033416" />
+	</inertial>
   </link>
 
   </xacro:macro>
