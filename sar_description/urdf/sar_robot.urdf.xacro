@@ -1,9 +1,13 @@
 <?xml version="1.0"?>
 <robot name="sar_robot" xmlns:xacro="http://wiki.ros.org/xacro">
 
+  <xacro:arg name="use_sim" default="false" />
   <xacro:arg name="mock" default="false" />
   <xacro:arg name="baud_rate" default="115200" />
   <xacro:arg name="device" default="/dev/ttyACM0" />
+  <xacro:arg name="namespace" default="" />
+  <xacro:arg name="controllers_config"
+             default="$(find sar_control)/config/controllers.yaml" />
 
   <xacro:include filename="$(find sar_description)/urdf/base/body.urdf.xacro" />
   <xacro:include filename="$(find sar_description)/urdf/base/wheel.urdf.xacro" />
@@ -18,17 +22,28 @@
   <xacro:body wheel_radius="${wheel_radius}" />
 
   <xacro:wheel side="fl" wheel_radius="${wheel_radius}"
-    x="${wheel_separation_x / 2}" y="${wheel_separation_y / 2}" />
+    x="${wheel_separation_x / 2}" y="${wheel_separation_y / 2}"
+    use_sim="$(arg use_sim)" variant="b" fdir="1 -1 0" />
   <xacro:wheel side="fr" wheel_radius="${wheel_radius}"
-    x="${wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
+    x="${wheel_separation_x / 2}" y="${-wheel_separation_y / 2}"
+    use_sim="$(arg use_sim)" variant="a" fdir="1 1 0" />
   <xacro:wheel side="rl" wheel_radius="${wheel_radius}"
-    x="${-wheel_separation_x / 2}" y="${wheel_separation_y / 2}" />
+    x="${-wheel_separation_x / 2}" y="${wheel_separation_y / 2}"
+    use_sim="$(arg use_sim)" variant="a" fdir="1 1 0" />
   <xacro:wheel side="rr" wheel_radius="${wheel_radius}"
-    x="${-wheel_separation_x / 2}" y="${-wheel_separation_y / 2}" />
+    x="${-wheel_separation_x / 2}" y="${-wheel_separation_y / 2}"
+    use_sim="$(arg use_sim)" variant="b" fdir="1 -1 0" />
 
   <xacro:rplidar x="0.0" y="0.0" z="0.14" />
   <xacro:realsense x="0.1375" y="0" z="0.0625" />
-  
-  <xacro:sar_ros2_control mock="$(arg mock)" baud_rate="$(arg baud_rate)" device="$(arg device)" />
+
+  <xacro:sar_ros2_control use_sim="$(arg use_sim)" mock="$(arg mock)"
+    baud_rate="$(arg baud_rate)" device="$(arg device)" />
+
+  <xacro:if value="$(arg use_sim)">
+    <xacro:include filename="$(find sar_description)/urdf/gazebo.urdf.xacro" />
+    <xacro:sar_gazebo controllers_config="$(arg controllers_config)"
+      namespace="$(arg namespace)" />
+  </xacro:if>
 
 </robot>
