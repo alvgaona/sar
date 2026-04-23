@@ -5,11 +5,11 @@
   <xacro:arg name="baud_rate" default="115200" />
   <xacro:arg name="device" default="/dev/ttyACM0" />
 
-  <xacro:include filename="$(find sar_description)/urdf/body.urdf.xacro" />
-  <xacro:include filename="$(find sar_description)/urdf/wheel.urdf.xacro" />
-  <xacro:include filename="$(find sar_description)/urdf/ros2_control.urdf.xacro" />
-  <xacro:include filename="$(find sar_description)/urdf/rplidar.urdf.xacro" />
-  <xacro:include filename="$(find sar_description)/urdf/realsense.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/base/body.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/base/wheel.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/control/ros2_control.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/sensors/rplidar.urdf.xacro" />
+  <xacro:include filename="$(find sar_description)/urdf/sensors/realsense.urdf.xacro" />
 
   <xacro:property name="wheel_radius" value="0.03" />
   <xacro:property name="wheel_separation_x" value="0.200" />
