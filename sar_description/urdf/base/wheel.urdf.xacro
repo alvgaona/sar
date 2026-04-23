@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <robot xmlns:xacro="http://wiki.ros.org/xacro">
 
-  <xacro:macro name="wheel" params="side wheel_radius x y">
+  <xacro:macro name="wheel" params="side wheel_radius x y use_sim:=false variant:=a fdir:='1 1 0'">
 
     <xacro:property name="wheel_thickness" value="0.031" />
     <xacro:property name="wheel_mass" value="0.4" />
+    <xacro:property name="mecanum_mesh_scale" value="${wheel_radius / 0.05}" />
 
     <joint name="${side}_wheel_joint" type="continuous">
       <parent link="body_link" />
@@ -17,14 +18,23 @@
 
     <link name="${side}_wheel_link">
       <visual>
-      <geometry>
-        <mesh filename="package://sar_description/meshes/wheel.dae"
-              scale="0.0011 0.0011 0.0011"/>
-      </geometry>
-        <origin xyz="-0.07 -0.015 -0.022" rpy="0.0 0.0 ${pi/2}" />
-        <material name="wheel_color">
-          <color rgba="0.1 0.1 0.1 1.0" />
-        </material>
+        <xacro:if value="${use_sim}">
+          <geometry>
+            <mesh filename="package://rosbot_description/meshes/rosbot_xl/mecanum_${variant}.dae"
+                  scale="${mecanum_mesh_scale} ${mecanum_mesh_scale} ${mecanum_mesh_scale}"/>
+          </geometry>
+          <origin xyz="0.0 0.0 0.0" rpy="0.0 0.0 0.0" />
+        </xacro:if>
+        <xacro:unless value="${use_sim}">
+          <geometry>
+            <mesh filename="package://sar_description/meshes/wheel.dae"
+                  scale="0.0011 0.0011 0.0011"/>
+          </geometry>
+          <origin xyz="-0.07 -0.015 -0.022" rpy="0.0 0.0 ${pi/2}" />
+          <material name="wheel_color">
+            <color rgba="0.1 0.1 0.1 1.0" />
+          </material>
+        </xacro:unless>
       </visual>
 
       <collision>
@@ -41,6 +51,24 @@
                                                    izz="0.000044202" />
       </inertial>
     </link>
+
+    <xacro:if value="${use_sim}">
+      <gazebo reference="${side}_wheel_link" xmlns:ignition="http://ignitionrobotics.org/schema">
+        <collision>
+          <surface>
+            <friction>
+              <ode>
+                <mu>0.8</mu>
+                <mu2>0.2</mu2>
+                <slip1>0.035</slip1>
+                <slip2>0</slip2>
+                <fdir1 ignition:expressed_in="base_link">${fdir}</fdir1>
+              </ode>
+            </friction>
+          </surface>
+        </collision>
+      </gazebo>
+    </xacro:if>
 
   </xacro:macro>
 
