@@ -8,7 +8,7 @@
     <link name="base_footprint" />
     
     <joint name="base_to_footprint" type="fixed">
-      <origin xyz="0 0 0" rpy="0.0 0.0 0.0" />1
+      <origin xyz="0 0 0" rpy="0.0 0.0 0.0" />
       <parent link="base_link" />
       <child link="base_footprint" />
     </joint>
@@ -23,7 +23,7 @@
     <visual name="base_visual">
       <origin xyz="0.115 -0.0875 0" rpy="0 0 0"/>
       <geometry>
-        <mesh filename="package://sar_robot_description/meshes/SAR2.dae"
+        <mesh filename="package://sar_description/meshes/SAR2.dae"
               scale="0.001 0.001 0.001"/>
       </geometry>
     </visual>
