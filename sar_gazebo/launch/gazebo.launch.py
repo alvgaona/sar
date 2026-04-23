@@ -1,5 +1,6 @@
+from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, EnvironmentVariable
@@ -8,6 +9,37 @@ from launch_ros.substitutions import FindPackageShare
 import os
 
 PACKAGE_NAME = "sar_gazebo"
+
+SAR_WORLDS = {"office"}
+
+WORLD_SPAWN_DEFAULTS = {
+    "office": {"x": "-10.0", "y": "1.5", "z": "0.3", "yaw": "0.0"},
+}
+DEFAULT_SPAWN = {"x": "0.0", "y": "0.0", "z": "0.2", "yaw": "0.0"}
+
+ARUCO_ENABLED_WORLDS = {"husarion_world"}
+
+
+def resolve_world_name(context):
+    return LaunchConfiguration("world").perform(context)
+
+
+def resolve_world_path(context):
+    world = resolve_world_name(context)
+    if os.path.isabs(world) and os.path.isfile(world):
+        return world
+    if world in SAR_WORLDS:
+        return os.path.join(get_package_share_directory(PACKAGE_NAME), "worlds", f"{world}.sdf")
+    return os.path.join(get_package_share_directory("husarion_gz_worlds"), "worlds", f"{world}.sdf")
+
+
+def resolve_spawn(context):
+    world = resolve_world_name(context)
+    defaults = WORLD_SPAWN_DEFAULTS.get(world, DEFAULT_SPAWN)
+    return {
+        axis: (LaunchConfiguration(axis).perform(context) or defaults[axis])
+        for axis in ("x", "y", "z", "yaw")
+    }
 
 
 def generate_launch_description():
@@ -19,6 +51,20 @@ def generate_launch_description():
         description="Run RViz simultaneously.",
         choices=["True", "true", "False", "false"],
     )
+
+    declare_world_arg = DeclareLaunchArgument(
+        "world",
+        default_value="husarion_world",
+        description=(
+            "World to load. Either a preset name (e.g. 'husarion_world', 'husarion_office', "
+            "'sonoma_raceway', 'empty_with_plugins', 'office') or an absolute path to an SDF file."
+        ),
+    )
+
+    declare_x_arg = DeclareLaunchArgument("x", default_value="", description="Robot spawn X (override).")
+    declare_y_arg = DeclareLaunchArgument("y", default_value="", description="Robot spawn Y (override).")
+    declare_z_arg = DeclareLaunchArgument("z", default_value="", description="Robot spawn Z (override).")
+    declare_yaw_arg = DeclareLaunchArgument("yaw", default_value="", description="Robot spawn yaw (override).")
 
     models_path = PathJoinSubstitution(
         [FindPackageShare(PACKAGE_NAME), "models"]
@@ -39,16 +85,22 @@ def generate_launch_description():
         ]
     )
 
-    gz_sim = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [FindPackageShare("husarion_gz_worlds"), "launch", "gz_sim.launch.py"]
+    def gz_sim_setup(context):
+        return [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution(
+                        [FindPackageShare("husarion_gz_worlds"), "launch", "gz_sim.launch.py"]
+                    )
+                ),
+                launch_arguments={
+                    "gz_log_level": "1",
+                    "gz_world": resolve_world_path(context),
+                }.items(),
             )
-        ),
-        launch_arguments={
-            'gz_log_level': '1'
-        }.items()
-    )
+        ]
+
+    gz_sim = OpaqueFunction(function=gz_sim_setup)
 
     gz_bridge_config = PathJoinSubstitution(
         [FindPackageShare("rosbot_gazebo"), "config", "gz_bridge.yaml"]
@@ -60,40 +112,56 @@ def generate_launch_description():
         parameters=[{"config_file": gz_bridge_config}],
     )
 
-    spawn_robot = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution(
-                [
-                    FindPackageShare("rosbot_gazebo"),
-                    "launch",
-                    "spawn_robot.launch.py",
-                ]
+    def spawn_robot_setup(context):
+        spawn = resolve_spawn(context)
+        return [
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution(
+                        [
+                            FindPackageShare("rosbot_gazebo"),
+                            "launch",
+                            "spawn_robot.launch.py",
+                        ]
+                    )
+                ),
+                launch_arguments={
+                    "robot_model": "rosbot_xl",
+                    "configuration": "autonomy",
+                    "x": spawn["x"],
+                    "y": spawn["y"],
+                    "z": spawn["z"],
+                    "yaw": spawn["yaw"],
+                }.items(),
             )
-        ),
-        launch_arguments={
-            "robot_model": "rosbot_xl",
-            "configuration": "autonomy",
-            # "x": "0.0",
-            # "y": "0.0",
-            # "z": "0.2",
-        }.items(),
-    )
+        ]
 
-    spawn_aruco = Node(
-        package="ros_gz_sim",
-        executable="create",
-        arguments=[
-            "-name", "aruco1",
-            "-file", PathJoinSubstitution([FindPackageShare(PACKAGE_NAME), "models", "aruco1", "model.sdf"]),
-            "-x", "3.0",
-            "-y", "-2.0",
-            "-z", "0.8",
-            "-R", "0.0",
-            "-P", "0.0",
-            "-Y", "1.59",
-        ],
-        output="screen",
-    )
+    spawn_robot = OpaqueFunction(function=spawn_robot_setup)
+
+    def spawn_aruco_setup(context):
+        if resolve_world_name(context) not in ARUCO_ENABLED_WORLDS:
+            return []
+        return [
+            Node(
+                package="ros_gz_sim",
+                executable="create",
+                arguments=[
+                    "-name", "aruco1",
+                    "-file", os.path.join(
+                        get_package_share_directory(PACKAGE_NAME), "models", "aruco1", "model.sdf"
+                    ),
+                    "-x", "3.0",
+                    "-y", "-2.0",
+                    "-z", "0.8",
+                    "-R", "0.0",
+                    "-P", "0.0",
+                    "-Y", "1.59",
+                ],
+                output="screen",
+            )
+        ]
+
+    spawn_aruco = OpaqueFunction(function=spawn_aruco_setup)
 
     rviz_config = PathJoinSubstitution(
         [FindPackageShare(PACKAGE_NAME), "config", "rosbot.rviz"]
@@ -118,6 +186,11 @@ def generate_launch_description():
     return LaunchDescription(
         [
             declare_rviz_arg,
+            declare_world_arg,
+            declare_x_arg,
+            declare_y_arg,
+            declare_z_arg,
+            declare_yaw_arg,
             set_gazebo_model_path,
             SetRemap("/diagnostics", "diagnostics"),
             SetRemap("/tf", "tf"),
