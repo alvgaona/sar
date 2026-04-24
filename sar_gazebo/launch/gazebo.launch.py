@@ -221,11 +221,23 @@ def generate_launch_description():
             output="screen",
         )
 
+        laser_filter_config = os.path.join(
+            get_package_share_directory("rosbot_utils"),
+            "config", "rosbot_xl", "laser_filter.yaml",
+        )
+        laser_filter_node = Node(
+            package="laser_filters",
+            executable="scan_to_scan_filter_chain",
+            name="laser_filter",
+            parameters=[laser_filter_config],
+        )
+
         return [
             description_launch,
             TimerAction(period=2.0, actions=[spawn_entity]),
             TimerAction(period=5.0, actions=[spawn_joint_state_broadcaster]),
             TimerAction(period=6.0, actions=[spawn_drive_controller]),
+            laser_filter_node,
         ]
 
     spawn_robot = OpaqueFunction(function=spawn_robot_setup)
