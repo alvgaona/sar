@@ -11,6 +11,7 @@ explore_node:
     gain_scale: 1.0
     transform_tolerance: 0.1
     min_frontier_size: 0.3
+    max_frontier_distance: 2.0
 
 bt_navigator:
   ros__parameters:
