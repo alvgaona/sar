@@ -204,7 +204,7 @@ def generate_launch_description():
         )
 
         controllers_config = os.path.join(
-            get_package_share_directory("sar_control"), "config", "controllers.yaml"
+            get_package_share_directory("sar_control"), "config", "controllers_sim.yaml"
         )
 
         spawn_joint_state_broadcaster = Node(
