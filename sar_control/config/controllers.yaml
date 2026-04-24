@@ -31,7 +31,7 @@ mecanum_drive_controller:
     open_loop: false
     position_feedback: false
     velocity_rolling_window_size: 1
-    enable_odom_tf: false
+    enable_odom_tf: true
 
     cmd_vel_timeout: 0.5
     publish_limited_velocity: false
