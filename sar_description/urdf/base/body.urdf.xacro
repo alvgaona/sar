@@ -34,12 +34,22 @@
         </geometry>
       </collision>
 
-      <inertial>
-        <mass value="3.5" />
-        <inertia ixx="0.01393" ixy="0.0" ixz="0.0"
-                               iyy="0.01081" iyz="0.0"
-                                             izz="0.02048" />
-      </inertial>
+      <xacro:if value="$(arg use_sim)">
+        <inertial>
+          <mass value="3.5" />
+          <inertia ixx="0.01393" ixy="0.0" ixz="0.0"
+                                 iyy="0.01081" iyz="0.0"
+                                               izz="0.02048" />
+        </inertial>
+      </xacro:if>
+      <xacro:unless value="$(arg use_sim)">
+        <inertial>
+          <mass value="3.0" />
+          <inertia ixx="0.019480348" ixy="0.006659356" ixz="-0.010307569"
+                                iyy="0.040014748" iyz="0.004784591"
+                                            izz="0.028414280" />
+        </inertial>
+      </xacro:unless>
     </link>
 
     <joint name="body_to_imu_joint" type="fixed">

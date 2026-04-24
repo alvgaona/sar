@@ -15,9 +15,16 @@
   <xacro:include filename="$(find sar_description)/urdf/sensors/rplidar.urdf.xacro" />
   <xacro:include filename="$(find sar_description)/urdf/sensors/realsense.urdf.xacro" />
 
-  <xacro:property name="wheel_radius" value="0.05" />
-  <xacro:property name="wheel_separation_x" value="0.170" />
-  <xacro:property name="wheel_separation_y" value="0.270" />
+  <xacro:if value="$(arg use_sim)">
+    <xacro:property name="wheel_radius" value="0.05" />
+    <xacro:property name="wheel_separation_x" value="0.170" />
+    <xacro:property name="wheel_separation_y" value="0.270" />
+  </xacro:if>
+  <xacro:unless value="$(arg use_sim)">
+    <xacro:property name="wheel_radius" value="0.03" />
+    <xacro:property name="wheel_separation_x" value="0.200" />
+    <xacro:property name="wheel_separation_y" value="0.190" />
+  </xacro:unless>
 
   <xacro:body wheel_radius="${wheel_radius}" />
 

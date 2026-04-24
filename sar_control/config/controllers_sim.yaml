@@ -16,11 +16,11 @@ mecanum_drive_controller:
     front_right_wheel_name: fr_wheel_joint
     rear_left_wheel_name: rl_wheel_joint
     rear_right_wheel_name: rr_wheel_joint
-    wheel_separation_x: 0.200
-    wheel_separation_y: 0.190
-    wheel_radius: 0.03
-    wheel_separation_x_multiplier: 1.0
-    wheel_separation_y_multiplier: 1.0
+    wheel_separation_x: 0.170
+    wheel_separation_y: 0.270
+    wheel_radius: 0.05
+    wheel_separation_x_multiplier: 0.95
+    wheel_separation_y_multiplier: 0.95
     wheel_radius_multiplier: 1.0
     odom_frame_id: odom
     base_frame_id: base_link
