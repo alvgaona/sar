@@ -5,7 +5,7 @@
     <ros2_control name="sar_system" type="system">
       <hardware>
         <xacro:if value="${use_sim}">
-          <plugin>gz_ros2_control/GazeboSimSystem</plugin>
+          <plugin>ign_ros2_control/IgnitionSystem</plugin>
         </xacro:if>
         <xacro:unless value="${use_sim}">
           <plugin>sar_control/SarSystemHardware</plugin>

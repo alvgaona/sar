@@ -4,6 +4,11 @@
     gz_type_name: gz.msgs.Clock
     direction: GZ_TO_ROS
 
+  - topic_name: /cmd_vel
+    ros_type_name: geometry_msgs/msg/Twist
+    gz_type_name: gz.msgs.Twist
+    direction: GZ_TO_ROS
+
   - topic_name: /scan
     ros_type_name: sensor_msgs/msg/LaserScan
     gz_type_name: gz.msgs.LaserScan
