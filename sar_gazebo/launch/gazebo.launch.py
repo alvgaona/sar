@@ -14,7 +14,7 @@ SAR_WORLDS = {"office"}
 
 WORLD_SPAWN_DEFAULTS = {
     "office": {"x": "-10.0", "y": "1.5", "z": "0.3", "yaw": "0.0"},
-    "husarion_world": {"x": "2.5", "y": "0.0", "z": "0.2", "yaw": "0.0"},
+    "husarion_world": {"x": "0.0", "y": "-2.5", "z": "0.2", "yaw": "0.0"},
 }
 DEFAULT_SPAWN = {"x": "0.0", "y": "0.0", "z": "0.2", "yaw": "0.0"}
 

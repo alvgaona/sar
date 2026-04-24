@@ -4,13 +4,15 @@
   <xacro:macro name="sar_gazebo" params="controllers_config namespace:=''">
 
     <gazebo>
-      <plugin filename="gz_ros2_control-system"
-              name="gz_ros2_control::GazeboSimROS2ControlPlugin">
+      <plugin filename="ign_ros2_control-system"
+              name="ign_ros2_control::IgnitionROS2ControlPlugin">
         <parameters>${controllers_config}</parameters>
         <ros>
           <xacro:if value="${namespace != ''}">
             <namespace>${namespace}</namespace>
           </xacro:if>
+          <remapping>mecanum_drive_controller/cmd_vel_unstamped:=cmd_vel</remapping>
+          <remapping>mecanum_drive_controller/odom:=odometry/wheels</remapping>
         </ros>
       </plugin>
     </gazebo>
