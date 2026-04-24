@@ -1,6 +1,6 @@
 from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable
+from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription, OpaqueFunction, SetEnvironmentVariable, TimerAction
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution, EnvironmentVariable
@@ -14,6 +14,7 @@ SAR_WORLDS = {"office"}
 
 WORLD_SPAWN_DEFAULTS = {
     "office": {"x": "-10.0", "y": "1.5", "z": "0.3", "yaw": "0.0"},
+    "husarion_world": {"x": "2.5", "y": "0.0", "z": "0.2", "yaw": "0.0"},
 }
 DEFAULT_SPAWN = {"x": "0.0", "y": "0.0", "z": "0.2", "yaw": "0.0"}
 
@@ -90,6 +91,16 @@ def generate_launch_description():
         [FindPackageShare("husarion_gz_worlds"), "models"]
     )
 
+    # Resolve `model://<pkg>/...` URIs emitted by ros_gz_sim when converting
+    # URDF `package://<pkg>/...` references. Each entry must be the parent
+    # of `<pkg>/`, i.e. the install/share directory.
+    pkg_share_parents = []
+    for _pkg in ("sar_description", "rosbot_description"):
+        try:
+            pkg_share_parents.append(os.path.dirname(get_package_share_directory(_pkg)))
+        except Exception:
+            pass
+
     set_gazebo_model_path = SetEnvironmentVariable(
         name='GZ_SIM_RESOURCE_PATH',
         value=[
@@ -97,7 +108,9 @@ def generate_launch_description():
             os.pathsep,
             models_path,
             os.pathsep,
-            husarion_models_path
+            husarion_models_path,
+            os.pathsep,
+            os.pathsep.join(pkg_share_parents),
         ]
     )
 
@@ -210,9 +223,9 @@ def generate_launch_description():
 
         return [
             description_launch,
-            spawn_entity,
-            spawn_joint_state_broadcaster,
-            spawn_drive_controller,
+            TimerAction(period=2.0, actions=[spawn_entity]),
+            TimerAction(period=5.0, actions=[spawn_joint_state_broadcaster]),
+            TimerAction(period=6.0, actions=[spawn_drive_controller]),
         ]
 
     spawn_robot = OpaqueFunction(function=spawn_robot_setup)
