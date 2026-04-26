@@ -256,7 +256,7 @@ def generate_launch_description():
                 arguments=[
                     "-name", "ArucoBox",
                     "-file", os.path.join(
-                        get_package_share_directory(PACKAGE_NAME), "models", "ArucoBox", "model.sdf"
+                        get_package_share_directory(PACKAGE_NAME), "models", "arucobox", "model.sdf"
                     ),
                     "-x", pose["x"],
                     "-y", pose["y"],
