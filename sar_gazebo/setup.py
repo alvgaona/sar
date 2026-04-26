@@ -26,6 +26,15 @@ setup(
             ['models/office/model.config', 'models/office/model.sdf']),
         (os.path.join('share', package_name, 'models', 'office', 'meshes'),
             glob('models/office/meshes/*.stl')),
+        (os.path.join('share', package_name, 'models', 'ArucoBox'),
+            ['models/ArucoBox/model.config', 'models/ArucoBox/model.sdf']),
+        (os.path.join('share', package_name, 'models', 'ArucoBox', 'meshes'),
+            glob('models/ArucoBox/meshes/*.obj')
+            + glob('models/ArucoBox/meshes/*.mtl')
+            + glob('models/ArucoBox/meshes/*.dae')),
+        (os.path.join('share', package_name, 'models', 'ArucoBox', 'textures'),
+            glob('models/ArucoBox/textures/*.png')
+            + glob('models/ArucoBox/textures/*.jpg')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,

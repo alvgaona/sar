@@ -18,7 +18,10 @@ WORLD_SPAWN_DEFAULTS = {
 }
 DEFAULT_SPAWN = {"x": "0.0", "y": "0.0", "z": "0.2", "yaw": "0.0"}
 
-ARUCO_ENABLED_WORLDS = {"husarion_world"}
+ARUCO_BOX_POSES = {
+    "husarion_world": {"x": "2.0", "y": "2.0", "z": "0.5", "yaw": "0.0"},
+    "office": {"x": "-19.0", "y": "-8.0", "z": "0.5", "yaw": "0.0"},
+}
 
 SUPPORTED_ROBOTS = {"rosbot", "sar"}
 
@@ -64,7 +67,7 @@ def generate_launch_description():
 
     declare_world_arg = DeclareLaunchArgument(
         "world",
-        default_value="husarion_world",
+        default_value="office",
         description=(
             "World to load. Either a preset name (e.g. 'husarion_world', 'husarion_office', "
             "'sonoma_raceway', 'empty_with_plugins', 'office') or an absolute path to an SDF file."
@@ -242,30 +245,31 @@ def generate_launch_description():
 
     spawn_robot = OpaqueFunction(function=spawn_robot_setup)
 
-    def spawn_aruco_setup(context):
-        if resolve_world_name(context) not in ARUCO_ENABLED_WORLDS:
+    def spawn_aruco_box_setup(context):
+        pose = ARUCO_BOX_POSES.get(resolve_world_name(context))
+        if pose is None:
             return []
         return [
             Node(
                 package="ros_gz_sim",
                 executable="create",
                 arguments=[
-                    "-name", "aruco1",
+                    "-name", "ArucoBox",
                     "-file", os.path.join(
-                        get_package_share_directory(PACKAGE_NAME), "models", "aruco1", "model.sdf"
+                        get_package_share_directory(PACKAGE_NAME), "models", "ArucoBox", "model.sdf"
                     ),
-                    "-x", "3.0",
-                    "-y", "-2.0",
-                    "-z", "0.8",
+                    "-x", pose["x"],
+                    "-y", pose["y"],
+                    "-z", pose["z"],
                     "-R", "0.0",
                     "-P", "0.0",
-                    "-Y", "1.59",
+                    "-Y", pose["yaw"],
                 ],
                 output="screen",
             )
         ]
 
-    spawn_aruco = OpaqueFunction(function=spawn_aruco_setup)
+    spawn_aruco_box = OpaqueFunction(function=spawn_aruco_box_setup)
 
     rviz_config = PathJoinSubstitution(
         [FindPackageShare(PACKAGE_NAME), "config", "rosbot.rviz"]
@@ -304,7 +308,7 @@ def generate_launch_description():
             gz_sim,
             gz_bridge,
             spawn_robot,
-            spawn_aruco,
+            spawn_aruco_box,
             rviz_launch,
         ]
     )
