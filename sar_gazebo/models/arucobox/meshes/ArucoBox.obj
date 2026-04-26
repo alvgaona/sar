@@ -1,0 +1,34 @@
+# Aruco cube — 1m, centered at origin, consistent CCW UV winding per face
+mtllib ArucoBox.mtl
+o ArucoCube
+v -0.500000 -0.500000 -0.500000
+v  0.500000 -0.500000 -0.500000
+v  0.500000  0.500000 -0.500000
+v -0.500000  0.500000 -0.500000
+v -0.500000 -0.500000  0.500000
+v  0.500000 -0.500000  0.500000
+v  0.500000  0.500000  0.500000
+v -0.500000  0.500000  0.500000
+vn  0.0  0.0 -1.0
+vn  0.0  0.0  1.0
+vn  0.0 -1.0  0.0
+vn  0.0  1.0  0.0
+vn -1.0  0.0  0.0
+vn  1.0  0.0  0.0
+vt 0.0 0.0
+vt 1.0 0.0
+vt 1.0 1.0
+vt 0.0 1.0
+usemtl Material.001
+# -Z face (bottom). Normal (0,0,-1). CCW viewed from outside (-Z looking +Z)
+f 1/1/1 4/2/1 3/3/1 2/4/1
+# +Z face (top). Normal (0,0,+1). CCW viewed from outside (+Z looking -Z)
+f 5/1/2 6/2/2 7/3/2 8/4/2
+# -Y face (front). Normal (0,-1,0). CCW viewed from outside (-Y looking +Y)
+f 1/1/3 2/2/3 6/3/3 5/4/3
+# +Y face (back). Normal (0,+1,0). CCW viewed from outside (+Y looking -Y)
+f 4/1/4 8/2/4 7/3/4 3/4/4
+# -X face (left). Normal (-1,0,0). CCW viewed from outside (-X looking +X)
+f 1/1/5 5/2/5 8/3/5 4/4/5
+# +X face (right). Normal (+1,0,0). CCW viewed from outside (+X looking -X)
+f 2/1/6 3/2/6 7/3/6 6/4/6

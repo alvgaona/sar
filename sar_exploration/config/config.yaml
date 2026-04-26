@@ -5,19 +5,26 @@ explore_node:
     costmap_updates_topic: /global_costmap/costmap_updates
     visualize: true
     planner_frequency: 0.2
-    progress_timeout: 30.0
+    # Generous progress window — once a frontier is blacklisted, explore_lite
+    # never retries it for the rest of the run, so being trigger-happy here
+    # makes exploration finish prematurely with frontiers left.
+    progress_timeout: 60.0
     potential_scale: 5.0
     orientation_scale: 0.5
     gain_scale: 1.0
     transform_tolerance: 0.1
-    min_frontier_size: 0.3
+    # Lower than the default 0.5 so small frontiers (narrow doorways, niches)
+    # are still considered — otherwise the robot can declare "done" while a
+    # 30 cm gap to an unexplored room remains.
+    min_frontier_size: 0.1
+    max_frontier_distance: 0.0
 
 bt_navigator:
   ros__parameters:
     global_frame: map
     robot_base_frame: base_link
     odom_topic: odometry/filtered
-    bt_loop_duration: 10
+    bt_loop_duration: 100
     default_server_timeout: 20
     wait_for_service_timeout: 1000
     action_server_result_timeout: 900.0
@@ -74,22 +81,25 @@ controller_server:
     controller_plugins: ["FollowPath"]
     FollowPath:
       plugin: "dwb_core::DWBLocalPlanner"
-      min_vel_x: -0.4
-      min_vel_y: -0.4
-      max_vel_x: 0.4
-      max_vel_y: 0.4
+      # Forward-only: with min_vel_x clamped to 0, DWB can't sample reverse
+      # trajectories, so when the goal is behind, the planner picks an
+      # in-place rotation instead of a backward drive.
+      min_vel_x: 0.0
+      min_vel_y: 0.0
+      max_vel_x: 1.0
+      max_vel_y: 0.0
       max_vel_theta: 1.5
       min_speed_xy: 0.0
-      max_speed_xy: 0.4
+      max_speed_xy: 1.0
       min_speed_theta: 0.0
-      acc_lim_x: 1.5
-      acc_lim_y: 1.5
+      acc_lim_x: 2.5
+      acc_lim_y: 0.0
       acc_lim_theta: 3.0
-      decel_lim_x: -1.5
-      decel_lim_y: -1.5
+      decel_lim_x: -2.5
+      decel_lim_y: 0.0
       decel_lim_theta: -3.0
       vx_samples: 20
-      vy_samples: 10
+      vy_samples: 1
       vtheta_samples: 20
       sim_time: 1.7
       linear_granularity: 0.05
@@ -147,7 +157,7 @@ local_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        inflation_radius: 0.85
+        inflation_radius: 0.6
         cost_scaling_factor: 3.0
 
 global_costmap:
@@ -184,7 +194,7 @@ global_costmap:
       inflation_layer:
         plugin: "nav2_costmap_2d::InflationLayer"
         enabled: True
-        inflation_radius: 0.85
+        inflation_radius: 0.6
         cost_scaling_factor: 3.0
 
 planner_server:
@@ -192,10 +202,20 @@ planner_server:
     expected_planner_frequency: 1.0
     planner_plugins: ["GridBased"]
     GridBased:
-      plugin: "nav2_navfn_planner/NavfnPlanner"
-      tolerance: 0.2
-      use_astar: false
+      # NavfnPlanner repeatedly hit the "Failed to create a plan from potential
+      # when a legal potential was found" backtrace bug on frontier goals near
+      # walls. SmacPlanner2D is the modern A* grid planner and handles those
+      # sliver-cell cases without the spurious failures.
+      plugin: "nav2_smac_planner/SmacPlanner2D"
+      tolerance: 0.5
+      downsample_costmap: false
+      downsampling_factor: 1
       allow_unknown: true
+      max_iterations: 1000000
+      max_on_approach_iterations: 1000
+      max_planning_time: 2.0
+      cost_travel_multiplier: 2.0
+      use_final_approach_orientation: false
 
 smoother_server:
   ros__parameters:
@@ -248,9 +268,9 @@ velocity_smoother:
     smoothing_frequency: 5.0
     scale_velocities: False
     feedback: "OPEN_LOOP"
-    max_velocity: [0.4, 0.4, 1.5]
-    min_velocity: [-0.4, -0.4, -1.5]
-    max_accel: [1.5, 1.5, 3.0]
-    max_decel: [-1.5, -1.5, -3.0]
+    max_velocity: [1.0, 0.0, 1.5]
+    min_velocity: [0.0, 0.0, -1.5]
+    max_accel: [2.5, 0.0, 3.0]
+    max_decel: [-2.5, 0.0, -3.0]
     deadband_velocity: [0.0, 0.0, 0.0]
     velocity_timeout: 1.0

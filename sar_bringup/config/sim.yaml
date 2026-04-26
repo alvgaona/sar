@@ -8,9 +8,24 @@ exploration:
 
 perception:
   enabled: true
-  marker_size: 0.75
+  marker_size: 0.855
   aruco_dict: "DICT_6X6_1000"
-  image_topic: "/oak/rgb/color"
+  image_topic: "/camera/image_raw"
+  # RViz visualization of the detected ArUco. The mesh is the same model
+  # spawned in Gazebo, so it overlays the physical box. The pose offset
+  # moves the rendered mesh from the marker face to the cube center
+  # (cube side = 1 m, so offset = -0.5).
+  marker_mesh_resource: "package://sar_gazebo/models/arucobox/meshes/ArucoBox.obj"
+  marker_pose_offset_z: -0.5
 
 gazebo:
   rviz: true
+  robot: sar
+  world: office
+
+mission:
+  enabled: true
+  home_x: 0.0
+  home_y: 0.0
+  home_yaw: 0.0
+  map_frame: map

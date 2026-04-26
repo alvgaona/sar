@@ -11,10 +11,9 @@ def generate_launch_description():
     marker_size = LaunchConfiguration("marker_size")
     aruco_dict = LaunchConfiguration("aruco_dict")
     image_topic = LaunchConfiguration("image_topic")
-    camera_fx = LaunchConfiguration("camera_fx")
-    camera_fy = LaunchConfiguration("camera_fy")
-    camera_cx = LaunchConfiguration("camera_cx")
-    camera_cy = LaunchConfiguration("camera_cy")
+    camera_info_topic = LaunchConfiguration("camera_info_topic")
+    marker_mesh_resource = LaunchConfiguration("marker_mesh_resource")
+    marker_pose_offset_z = LaunchConfiguration("marker_pose_offset_z")
     rs_rgb_width = LaunchConfiguration("rs_rgb_width")
     rs_rgb_height = LaunchConfiguration("rs_rgb_height")
     rs_rgb_fps = LaunchConfiguration("rs_rgb_fps")
@@ -39,20 +38,22 @@ def generate_launch_description():
         description="Camera image topic",
     )
 
-    declare_camera_fx_arg = DeclareLaunchArgument(
-        "camera_fx", default_value="1108.51", description="Camera focal length x"
+    declare_camera_info_topic_arg = DeclareLaunchArgument(
+        "camera_info_topic",
+        default_value="",
+        description="CameraInfo topic. Empty derives it from image_topic by replacing the last segment with 'camera_info'.",
     )
 
-    declare_camera_fy_arg = DeclareLaunchArgument(
-        "camera_fy", default_value="1108.51", description="Camera focal length y"
+    declare_marker_mesh_resource_arg = DeclareLaunchArgument(
+        "marker_mesh_resource",
+        default_value="",
+        description="package:// URI of a mesh to render as the RViz marker. Empty falls back to a green CUBE.",
     )
 
-    declare_camera_cx_arg = DeclareLaunchArgument(
-        "camera_cx", default_value="640.0", description="Camera principal point x"
-    )
-
-    declare_camera_cy_arg = DeclareLaunchArgument(
-        "camera_cy", default_value="360.0", description="Camera principal point y"
+    declare_marker_pose_offset_z_arg = DeclareLaunchArgument(
+        "marker_pose_offset_z",
+        default_value="0.0",
+        description="Offset (m) along the marker's local Z axis applied to the published pose. Use -marker_size/2 to move from the face to the cube center.",
     )
 
     declare_rs_rgb_width_arg = DeclareLaunchArgument(
@@ -95,11 +96,10 @@ def generate_launch_description():
         parameters=[
             {"marker_size": marker_size},
             {"aruco_dict": aruco_dict},
-            {"camera_fx": camera_fx},
-            {"camera_fy": camera_fy},
-            {"camera_cx": camera_cx},
-            {"camera_cy": camera_cy},
             {"image_topic": image_topic},
+            {"camera_info_topic": camera_info_topic},
+            {"marker_mesh_resource": marker_mesh_resource},
+            {"marker_pose_offset_z": marker_pose_offset_z},
         ],
         output="screen",
     )
@@ -110,10 +110,9 @@ def generate_launch_description():
             declare_marker_size_arg,
             declare_aruco_dict_arg,
             declare_image_topic_arg,
-            declare_camera_fx_arg,
-            declare_camera_fy_arg,
-            declare_camera_cx_arg,
-            declare_camera_cy_arg,
+            declare_camera_info_topic_arg,
+            declare_marker_mesh_resource_arg,
+            declare_marker_pose_offset_z_arg,
             declare_rs_rgb_width_arg,
             declare_rs_rgb_height_arg,
             declare_rs_rgb_fps_arg,

@@ -6,14 +6,14 @@
   <joint name="realsense_joint" type="fixed">
     <parent link="body_link"/>
     <child link="camera_frame"/>
-    <origin xyz="${x} ${y} ${z}" rpy="0 0 1.5708"/>
+    <origin xyz="${x} ${y} ${z}" rpy="0 0 0"/>
   </joint>
-  
+
   <link name="camera_frame">
 
-    
+
     <visual>
-      <origin xyz="0 0 0" rpy="1.5708 0 0"/>
+      <origin xyz="0 0 0" rpy="1.5708 0 1.5708"/>
       <geometry>
         <mesh filename="package://sar_description/meshes/realsense.dae"
               scale="0.001 0.001 0.001"/>
@@ -32,6 +32,14 @@
 		                                           izz="0.000033416" />
 	</inertial>
   </link>
+
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_frame"/>
+    <child link="camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
 
   </xacro:macro>
 

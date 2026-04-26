@@ -51,10 +51,10 @@ mecanum_drive_controller:
         has_velocity_limits: true
         has_acceleration_limits: true
         has_jerk_limits: false
-        max_velocity: 1.0
-        min_velocity: -1.0
-        max_acceleration: 3.0
-        min_acceleration: -3.0
+        max_velocity: 0.0
+        min_velocity: 0.0
+        max_acceleration: 0.0
+        min_acceleration: 0.0
         max_jerk: 0.0
     angular:
       z:
