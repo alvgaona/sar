@@ -33,6 +33,14 @@
 	</inertial>
   </link>
 
+  <joint name="camera_optical_joint" type="fixed">
+    <parent link="camera_frame"/>
+    <child link="camera_optical_frame"/>
+    <origin xyz="0 0 0" rpy="-1.5708 0 -1.5708"/>
+  </joint>
+
+  <link name="camera_optical_frame"/>
+
   </xacro:macro>
 
 </robot>
