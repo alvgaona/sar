@@ -26,15 +26,15 @@ setup(
             ['models/office/model.config', 'models/office/model.sdf']),
         (os.path.join('share', package_name, 'models', 'office', 'meshes'),
             glob('models/office/meshes/*.stl')),
-        (os.path.join('share', package_name, 'models', 'ArucoBox'),
-            ['models/ArucoBox/model.config', 'models/ArucoBox/model.sdf']),
-        (os.path.join('share', package_name, 'models', 'ArucoBox', 'meshes'),
-            glob('models/ArucoBox/meshes/*.obj')
-            + glob('models/ArucoBox/meshes/*.mtl')
-            + glob('models/ArucoBox/meshes/*.dae')),
-        (os.path.join('share', package_name, 'models', 'ArucoBox', 'textures'),
-            glob('models/ArucoBox/textures/*.png')
-            + glob('models/ArucoBox/textures/*.jpg')),
+        (os.path.join('share', package_name, 'models', 'arucobox'),
+            ['models/arucobox/model.config', 'models/arucobox/model.sdf']),
+        (os.path.join('share', package_name, 'models', 'arucobox', 'meshes'),
+            glob('models/arucobox/meshes/*.obj')
+            + glob('models/arucobox/meshes/*.mtl')
+            + glob('models/arucobox/meshes/*.dae')),
+        (os.path.join('share', package_name, 'models', 'arucobox', 'textures'),
+            glob('models/arucobox/textures/*.png')
+            + glob('models/arucobox/textures/*.jpg')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
