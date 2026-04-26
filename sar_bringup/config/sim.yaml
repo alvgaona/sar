@@ -3,14 +3,16 @@ slam:
   params_file: ""
 
 exploration:
-  enabled: true
+  enabled: false
   params_file: ""
 
 perception:
   enabled: true
-  marker_size: 0.75
+  marker_size: 0.855
   aruco_dict: "DICT_6X6_1000"
-  image_topic: "/oak/rgb/color"
+  image_topic: "/camera/image_raw"
 
 gazebo:
   rviz: true
+  robot: sar
+  world: office
