@@ -63,6 +63,16 @@ class ExploreAndDetect(Node):
             f'ArUco detected at {msg.distance:.2f} m. Pausing exploration.'
         )
         self.resume_pub.publish(Bool(data=False))
+        # Give explore_lite time to receive the pause and stop scheduling new
+        # goals. Without this, its planner_frequency timer can squeeze in one
+        # more frontier goal that preempts our home goal on the shared
+        # navigate_to_pose action server, surfacing as STATUS_CANCELED.
+        self._return_timer = self.create_timer(0.5, self._return_home_once)
+
+    def _return_home_once(self):
+        self._return_timer.cancel()
+        if self.state != State.MARKER_FOUND:
+            return
         self.return_home()
 
     def return_home(self):
