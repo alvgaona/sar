@@ -38,9 +38,14 @@ ros-humble-laser-filters = ">=2.0.9,<3"
 colcon-common-extensions = ">=0.3.0,<0.4"
 pyudev = ">=0.24.3,<0.25"
 ninja = ">=1.13.2,<2"
+# robostack-humble's rcutils exports `-latomic`, but macOS clang has no
+# system libatomic. conda-forge's libgcc ships libatomic.dylib on osx-arm64,
+# satisfying the linker.
+libgcc = "*"
 
 [environments]
 default = ["humble"]
 
 [activation]
 scripts = ["install/setup.sh"]
+env = { LIBRARY_PATH = "$CONDA_PREFIX/lib" }
