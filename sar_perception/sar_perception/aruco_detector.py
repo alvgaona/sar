@@ -15,6 +15,19 @@ import cv2
 import numpy as np
 
 
+def ema_pose(prev_xyz, prev_quat, new_xyz, new_quat, alpha):
+    """EMA on position; weighted-average + renormalize on quaternion (with
+    sign flip so antipodal quaternions are blended on the short arc)."""
+    xyz = (1.0 - alpha) * prev_xyz + alpha * new_xyz
+    if float(np.dot(prev_quat, new_quat)) < 0.0:
+        new_quat = -new_quat
+    quat = (1.0 - alpha) * prev_quat + alpha * new_quat
+    n = float(np.linalg.norm(quat))
+    if n > 0.0:
+        quat = quat / n
+    return xyz, quat
+
+
 def rvec_tvec_to_pose(rvec, tvec):
     rot, _ = cv2.Rodrigues(rvec)
     qw = np.sqrt(max(0.0, 1.0 + rot[0, 0] + rot[1, 1] + rot[2, 2])) / 2.0
@@ -42,6 +55,18 @@ class ArucoDetector(Node):
         self.declare_parameter('image_topic', '/oak/rgb/color')
         self.declare_parameter('camera_info_topic', '')
         self.declare_parameter('map_frame', 'map')
+        # Mesh resource for the RViz marker. Empty → fall back to a green CUBE
+        # the size of the ArUco marker. Use a package:// URI for ROS resources.
+        self.declare_parameter('marker_mesh_resource', '')
+        # Offset (meters) applied to the published pose along the marker's
+        # local Z axis. The detected pose is at the marker's face center;
+        # for a marker on a cube of side `marker_size`, set this to
+        # -marker_size/2 to move the rendered mesh to the cube center.
+        self.declare_parameter('marker_pose_offset_z', 0.0)
+        # Per-marker EMA over poses in the map frame. 0 disables smoothing
+        # (every detection is published as-is); 1 keeps only the first
+        # detection. 0.1 typically converges in a few seconds.
+        self.declare_parameter('smoothing_alpha', 0.1)
 
         self.marker_size = self.get_parameter('marker_size').value
         aruco_dict_name = self.get_parameter('aruco_dict').value
@@ -50,6 +75,11 @@ class ArucoDetector(Node):
         if not camera_info_topic:
             camera_info_topic = self.image_topic.rsplit('/', 1)[0] + '/camera_info'
         self.map_frame = self.get_parameter('map_frame').value
+        self.marker_mesh_resource = self.get_parameter('marker_mesh_resource').value
+        self.marker_pose_offset_z = float(self.get_parameter('marker_pose_offset_z').value)
+        self.smoothing_alpha = float(self.get_parameter('smoothing_alpha').value)
+        # marker_id -> (np.array(xyz), np.array(quat xyzw))
+        self.smoothed_pose = {}
 
         self.camera_matrix = None
         self.dist_coeffs = None
@@ -139,7 +169,17 @@ class ArucoDetector(Node):
             return None, None, None
         return rvec, tvec, float(np.linalg.norm(tvec))
 
-    def publish_map_marker(self, marker_id, pose_in_camera, header):
+    def publish_map_marker(self, marker_id, rvec, tvec, header):
+        # Apply the in-marker-frame Z offset (e.g. push the published pose from
+        # the detected face to the cube center for a marker on a box).
+        if self.marker_pose_offset_z != 0.0:
+            R, _ = cv2.Rodrigues(rvec)
+            offset_in_camera = R @ np.array(
+                [0.0, 0.0, self.marker_pose_offset_z], dtype=np.float32
+            )
+            tvec = tvec.flatten() + offset_in_camera
+        pose_in_camera = rvec_tvec_to_pose(rvec, tvec)
+
         # Use "latest available" rather than header.stamp: slam_toolbox publishes
         # map -> odom at its own rate (slower than the camera), so a stamped
         # lookup frequently fails with "extrapolation into the future". For a
@@ -160,20 +200,56 @@ class ArucoDetector(Node):
 
         pose_in_map = do_transform_pose(pose_in_camera, tf)
 
+        # Per-marker EMA so the rendered mesh converges instead of jittering
+        # on every single-frame PnP estimate.
+        new_xyz = np.array([pose_in_map.position.x,
+                            pose_in_map.position.y,
+                            pose_in_map.position.z], dtype=np.float64)
+        new_quat = np.array([pose_in_map.orientation.x,
+                             pose_in_map.orientation.y,
+                             pose_in_map.orientation.z,
+                             pose_in_map.orientation.w], dtype=np.float64)
+        if self.smoothing_alpha <= 0.0 or marker_id not in self.smoothed_pose:
+            self.smoothed_pose[int(marker_id)] = (new_xyz, new_quat)
+        else:
+            prev_xyz, prev_quat = self.smoothed_pose[int(marker_id)]
+            self.smoothed_pose[int(marker_id)] = ema_pose(
+                prev_xyz, prev_quat, new_xyz, new_quat, self.smoothing_alpha
+            )
+        smooth_xyz, smooth_quat = self.smoothed_pose[int(marker_id)]
+        pose_in_map.position.x = float(smooth_xyz[0])
+        pose_in_map.position.y = float(smooth_xyz[1])
+        pose_in_map.position.z = float(smooth_xyz[2])
+        pose_in_map.orientation.x = float(smooth_quat[0])
+        pose_in_map.orientation.y = float(smooth_quat[1])
+        pose_in_map.orientation.z = float(smooth_quat[2])
+        pose_in_map.orientation.w = float(smooth_quat[3])
+
         m = Marker()
         m.header.frame_id = self.map_frame
         m.header.stamp = self.get_clock().now().to_msg()
         m.ns = 'aruco'
         m.id = int(marker_id)
-        m.type = Marker.CUBE
         m.action = Marker.ADD
         m.pose = pose_in_map
-        m.scale.x = m.scale.y = m.scale.z = float(self.marker_size)
-        m.color.r = 0.0
-        m.color.g = 1.0
-        m.color.b = 0.0
-        m.color.a = 0.8
         m.frame_locked = False
+
+        if self.marker_mesh_resource:
+            m.type = Marker.MESH_RESOURCE
+            m.mesh_resource = self.marker_mesh_resource
+            m.mesh_use_embedded_materials = True
+            # Mesh authored at unit scale → render 1:1.
+            m.scale.x = m.scale.y = m.scale.z = 1.0
+            # color.a=0 with embedded materials = use the texture as-is.
+            m.color.a = 0.0
+        else:
+            m.type = Marker.CUBE
+            m.scale.x = m.scale.y = m.scale.z = float(self.marker_size)
+            m.color.r = 0.0
+            m.color.g = 1.0
+            m.color.b = 0.0
+            m.color.a = 0.8
+
         # lifetime=0 → persists; latest detection overwrites the same id+ns
         self.marker_pub.publish(m)
 
@@ -207,8 +283,7 @@ class ArucoDetector(Node):
                     detection_msg.distance = float(distance)
                     self.aruco_pub.publish(detection_msg)
 
-                    pose_in_cam = rvec_tvec_to_pose(rvec, tvec)
-                    self.publish_map_marker(ids[0][0], pose_in_cam, msg.header)
+                    self.publish_map_marker(ids[0][0], rvec, tvec, msg.header)
                 else:
                     self.get_logger().warn('Failed to estimate distance')
             else:
