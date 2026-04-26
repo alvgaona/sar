@@ -72,6 +72,8 @@ def launch_setup(context):
             "marker_size": str(perception_cfg.get("marker_size", 0.75)),
             "aruco_dict": perception_cfg.get("aruco_dict", "DICT_6X6_1000"),
             "image_topic": perception_cfg.get("image_topic", "/oak/rgb/color"),
+            "marker_mesh_resource": perception_cfg.get("marker_mesh_resource", ""),
+            "marker_pose_offset_z": str(perception_cfg.get("marker_pose_offset_z", 0.0)),
         }.items(),
     )
 
