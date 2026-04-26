@@ -2,7 +2,7 @@
 
 import rclpy
 from rclpy.node import Node
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import CameraInfo, Image
 from sar_msgs.msg import ArucoMsg
 from cv_bridge import CvBridge
 import cv2
@@ -15,31 +15,19 @@ class ArucoDetector(Node):
 
         # Parameters
         self.declare_parameter('marker_size', 0.30)
-        self.declare_parameter('aruco_dict', 'DICT_6X6_1000')  # ArUco dictionary
-        self.declare_parameter('camera_fx', 1108.51)  # Focal length x
-        self.declare_parameter('camera_fy', 1108.51)  # Focal length y
-        self.declare_parameter('camera_cx', 640.0)  # Principal point x
-        self.declare_parameter('camera_cy', 360.0)  # Principal point y
-        self.declare_parameter('image_topic', '/oak/rgb/color')  # Camera image topic
+        self.declare_parameter('aruco_dict', 'DICT_6X6_1000')
+        self.declare_parameter('image_topic', '/oak/rgb/color')
+        self.declare_parameter('camera_info_topic', '')
 
         self.marker_size = self.get_parameter('marker_size').value
         aruco_dict_name = self.get_parameter('aruco_dict').value
-        self.camera_fx = self.get_parameter('camera_fx').value
-        self.camera_fy = self.get_parameter('camera_fy').value
-        self.camera_cx = self.get_parameter('camera_cx').value
-        self.camera_cy = self.get_parameter('camera_cy').value
         self.image_topic = self.get_parameter('image_topic').value
+        camera_info_topic = self.get_parameter('camera_info_topic').value
+        if not camera_info_topic:
+            camera_info_topic = self.image_topic.rsplit('/', 1)[0] + '/camera_info'
 
-        # Camera matrix
-        self.camera_matrix = np.array([
-            [self.camera_fx, 0, self.camera_cx],
-            [0, self.camera_fy, self.camera_cy],
-            [0, 0, 1]
-        ], dtype=np.float32)
-
-        # Assume no distorton as Gazebo OAK-D model has no distortion in Gazebo.
-        # Could be configured with CameraInfo in the future.
-        self.dist_coeffs = np.zeros((5, 1), dtype=np.float32)
+        self.camera_matrix = None
+        self.dist_coeffs = None
 
         # ArUco possible dictionaries
         aruco_dict_map = {
@@ -70,14 +58,24 @@ class ArucoDetector(Node):
         self.aruco_params.adaptiveThreshWinSizeMin = 3
         self.aruco_params.adaptiveThreshWinSizeMax = 30
         self.aruco_params.adaptiveThreshWinSizeStep = 5
+        # Tighter than the default 0.05 — sim-rendered markers produce a near-duplicate
+        # candidate from anti-aliasing on the texture border, which the legacy detector
+        # would otherwise reject as "too close to another marker".
+        self.aruco_params.minMarkerDistanceRate = 0.01
 
         self.bridge = CvBridge()
 
-        # Subscriber
         self.image_sub = self.create_subscription(
             Image,
             self.image_topic,
             self.image_callback,
+            10
+        )
+
+        self.camera_info_sub = self.create_subscription(
+            CameraInfo,
+            camera_info_topic,
+            self.camera_info_callback,
             10
         )
 
@@ -86,7 +84,20 @@ class ArucoDetector(Node):
 
         self.get_logger().info(
             f'ArUco detector initialized - Dictionary: {aruco_dict_name}, '
-            f'Marker size: {self.marker_size}m'
+            f'Marker size: {self.marker_size}m, '
+            f'image: {self.image_topic}, camera_info: {camera_info_topic}'
+        )
+
+    def camera_info_callback(self, msg):
+        if self.camera_matrix is not None:
+            return
+        self.camera_matrix = np.array(msg.k, dtype=np.float32).reshape(3, 3)
+        d = list(msg.d) if msg.d else [0.0] * 5
+        self.dist_coeffs = np.array(d, dtype=np.float32).reshape(-1, 1)
+        self.get_logger().info(
+            f'Camera intrinsics received: fx={self.camera_matrix[0,0]:.2f}, '
+            f'fy={self.camera_matrix[1,1]:.2f}, cx={self.camera_matrix[0,2]:.2f}, '
+            f'cy={self.camera_matrix[1,2]:.2f}'
         )
 
     def estimate_distance(self, corners):
@@ -129,6 +140,12 @@ class ArucoDetector(Node):
 
     def image_callback(self, msg):
         """Process camera image and detect ArUco markers"""
+        if self.camera_matrix is None:
+            self.get_logger().warn(
+                'Waiting for camera_info before processing images',
+                throttle_duration_sec=5.0,
+            )
+            return
         try:
             # Convert ROS Image to OpenCV image
             cv_image = self.bridge.imgmsg_to_cv2(msg, desired_encoding='bgr8')
