@@ -26,6 +26,8 @@ def launch_setup(context):
         ),
         launch_arguments={
             "rviz": str(gazebo_cfg.get("rviz", True)),
+            "robot": gazebo_cfg.get("robot", "rosbot"),
+            "world": gazebo_cfg.get("world", "office"),
         }.items(),
     )
 
