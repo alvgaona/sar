@@ -1,69 +1,44 @@
 # sar_control
 
-ros2_control hardware interface for the SAR robot. Communicates with an Arduino Uno/Mega over USB serial to command
-4 mecanum wheel velocities (rad/s) and read encoder feedback.
+`ros2_control` `SystemInterface` for the real SAR robot. Talks to an Arduino
+over USB serial (Boost.Asio) to send 4 mecanum wheel velocities (rad/s) and
+read encoder feedback. Loaded by `sar_description` when `use_sim:=false`.
 
-## Build
+Workspace-level setup is in the [root README](../README.md).
 
-```bash
-colcon build --symlink-install --packages-select sar_control
-source install/setup.bash
-```
-or
-```bash
-pixi run build-pkg sar_control
-```
-
-## Arduino configuration (Linux / Raspberry Pi)
-
-To get the serial device name of a real Arduino board, use this command:
+## Run
 
 ```bash
-readlink -e /dev/serial/by-id/*Arduino*
+ros2 launch sar_control control.launch.py                  # real Arduino
+ros2 launch sar_control control.launch.py mock:=true       # no hardware
 ```
 
-If you use the same Arduino clone as us, there's a udev rule in the repositorie's script folder. This makes it so the board is always accessible as `/dev/arduClone`.
+If the Arduino isn't on `/dev/arduClone`, pass `device:=/dev/ttyACM0` (or
+the path printed by `readlink -e /dev/serial/by-id/*Arduino*`). The udev
+rule under `scripts/` pins our Arduino clone to `/dev/arduClone`.
 
-If it's different than `/dev/arduClone`, append `device:=${yourDeviceNameHere}` to the launch call.
+Before flashing firmware the serial port must be writable:
 
-Before flashing the software onto the board, it needs to be writable, so use this command:
-
-```bash
-sudo chmod a+rw $(readlink -enq /dev/serial/by-id/*Arduino*)
-```
-or
 ```bash
 sudo chmod a+rw /dev/arduClone
+# or, for any Arduino:
+sudo chmod a+rw $(readlink -enq /dev/serial/by-id/*Arduino*)
 ```
 
-## Test (macOS)
+## Notes
 
-The controller manager crashes on macOS. Use the standalone test instead:
+- The controller manager is unstable on macOS; for hardware-interface
+  development use the standalone tester: `ros2 run sar_control test_hardware`.
+- Wheel velocities round-trip in **rad/s** between the controller and the
+  hardware interface; the firmware converts to PWM internally.
+- `config/controllers.yaml` is the real-robot config. `config/controllers_sim.yaml`
+  is the Gazebo variant (different wheel geometry, multipliers, tighter
+  velocity limits, y-axis zeroed for diff-drive behavior).
 
-```bash
-ros2 run sar_control test_hardware
-```
-
-## Launch (Linux / Raspberry Pi)
-
-```bash
-ros2 launch sar_control control.launch.py
-```
-
-To run in mock mode (no Arduino needed):
-
-```bash
-ros2 launch sar_control control.launch.py mock:=true
-```
-
-## Unit Conversion
-
-The mecanum drive controller outputs and receives wheel velocities in rad/s.
-
-## Serial Protocol
+## Serial protocol
 
 | Direction | Format | Example |
-|-----------|--------|---------|
+| --- | --- | --- |
 | Pi → Arduino | `v:<fl>,<fr>,<rl>,<rr>\n` | `v:100,-50,100,-50\n` |
 | Pi → Arduino | `e\n` (request encoders) | `e\n` |
 | Arduino → Pi | `e:<fl>,<fr>,<rl>,<rr>\n` | `e:1234,-567,1234,-567\n` |
