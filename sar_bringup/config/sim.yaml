@@ -3,7 +3,7 @@ slam:
   params_file: ""
 
 exploration:
-  enabled: false
+  enabled: true
   params_file: ""
 
 perception:
@@ -16,3 +16,10 @@ gazebo:
   rviz: true
   robot: sar
   world: office
+
+mission:
+  enabled: false
+  home_x: 0.0
+  home_y: 0.0
+  home_yaw: 0.0
+  map_frame: map

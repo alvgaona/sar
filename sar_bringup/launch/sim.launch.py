@@ -17,6 +17,7 @@ def launch_setup(context):
     exploration_cfg = config.get("exploration", {})
     perception_cfg = config.get("perception", {})
     gazebo_cfg = config.get("gazebo", {})
+    mission_cfg = config.get("mission", {})
 
     gazebo = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -43,7 +44,12 @@ def launch_setup(context):
         launch_arguments=slam_args.items(),
     )
 
-    exploration_args = {"use_sim_time": "true"}
+    exploration_args = {
+        "use_sim_time": "true",
+        # SLAM is composed at the bringup level (or disabled here); never let
+        # sar_exploration spin up a second slam_toolbox node.
+        "include_slam": "false",
+    }
     if exploration_cfg.get("params_file"):
         exploration_args["params_file"] = exploration_cfg["params_file"]
     exploration = IncludeLaunchDescription(
@@ -69,6 +75,20 @@ def launch_setup(context):
         }.items(),
     )
 
+    mission = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            PathJoinSubstitution(
+                [FindPackageShare("sar_mission"), "launch", "explore_and_detect.launch.py"]
+            )
+        ),
+        launch_arguments={
+            "home_x": str(mission_cfg.get("home_x", 0.0)),
+            "home_y": str(mission_cfg.get("home_y", 0.0)),
+            "home_yaw": str(mission_cfg.get("home_yaw", 0.0)),
+            "map_frame": mission_cfg.get("map_frame", "map"),
+        }.items(),
+    )
+
     actions = [gazebo]
     if slam_cfg.get("enabled", True):
         actions.append(slam)
@@ -76,6 +96,8 @@ def launch_setup(context):
         actions.append(exploration)
     if perception_cfg.get("enabled", True):
         actions.append(perception)
+    if mission_cfg.get("enabled", False):
+        actions.append(mission)
 
     return actions
 
