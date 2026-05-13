@@ -43,7 +43,8 @@ hardware_interface::CallbackReturn SarSystemHardware::on_init(
     if (joint.state_interfaces.size() != 1) {
       RCLCPP_ERROR(
         rclcpp::get_logger("SarSystemHardware"),
-        "Joint '%s' must have exactly one state interface", joint.name.c_str());
+        "Joint '%s' must have exactly two state interfaces (velocity + position)",
+        joint.name.c_str());
       return hardware_interface::CallbackReturn::ERROR;
     }
   }
