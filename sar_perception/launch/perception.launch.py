@@ -79,6 +79,7 @@ def generate_launch_description():
             "enable_infra2": False,
             "enable_gyro": False,
             "enable_accel": False,
+            "initial_reset": True,
             "rgb_camera.color_profile": [
                 rs_rgb_width, TextSubstitution(text="x"),
                 rs_rgb_height, TextSubstitution(text="x"),
