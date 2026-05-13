@@ -5,7 +5,7 @@
     <joint name="rplidar_joint" type="fixed">
       <parent link="body_link" />
       <child link="laser_frame" />
-      <origin xyz="${x} ${y} ${z}" rpy="0.0 0.0 0.0" />
+      <origin xyz="${x} ${y} ${z}" rpy="${pi} ${pi} 0.0" />
     </joint>
 
     <link name="laser_frame">
