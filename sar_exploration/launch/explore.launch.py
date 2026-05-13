@@ -1,8 +1,9 @@
 from launch import LaunchDescription
-from launch.actions import DeclareLaunchArgument, IncludeLaunchDescription
+from launch.actions import DeclareLaunchArgument, GroupAction, IncludeLaunchDescription
 from launch.conditions import IfCondition
 from launch.launch_description_sources import PythonLaunchDescriptionSource
 from launch.substitutions import LaunchConfiguration, PathJoinSubstitution
+from launch_ros.actions import SetRemap
 from launch_ros.substitutions import FindPackageShare
 
 
@@ -42,14 +43,19 @@ def generate_launch_description():
         condition=IfCondition(include_slam),
     )
 
-    nav2_bringup_launch = IncludeLaunchDescription(
-        PythonLaunchDescriptionSource(
-            PathJoinSubstitution([nav2_bringup_dir, 'launch', 'navigation_launch.py'])
-        ),
-        launch_arguments={
-            'use_sim_time': use_sim_time,
-            'params_file': params_file,
-        }.items(),
+    nav2_bringup_launch = GroupAction(
+        [
+            SetRemap(src='/cmd_vel', dst='/mecanum_drive_controller/cmd_vel_unstamped'),
+            IncludeLaunchDescription(
+                PythonLaunchDescriptionSource(
+                    PathJoinSubstitution([nav2_bringup_dir, 'launch', 'navigation_launch.py'])
+                ),
+                launch_arguments={
+                    'use_sim_time': use_sim_time,
+                    'params_file': params_file,
+                }.items(),
+            ),
+        ]
     )
 
     explore_lite_launch = IncludeLaunchDescription(

@@ -106,9 +106,13 @@ class ArucoDetector(Node):
 
         self.aruco_dict = cv2.aruco.getPredefinedDictionary(aruco_dict_map[aruco_dict_name])
 
-        # Important: use DetectorParameters_create for Legacy API compatibility.
-        # Otherwise, there's a segmentation fault
-        self.aruco_params = cv2.aruco.DetectorParameters_create()
+        # OpenCV ArUco API differs across versions:
+        # - legacy: DetectorParameters_create()
+        # - newer:  DetectorParameters()
+        if hasattr(cv2.aruco, 'DetectorParameters_create'):
+            self.aruco_params = cv2.aruco.DetectorParameters_create()
+        else:
+            self.aruco_params = cv2.aruco.DetectorParameters()
         self.aruco_params.maxMarkerPerimeterRate = 10.0
         self.aruco_params.adaptiveThreshWinSizeMin = 3
         self.aruco_params.adaptiveThreshWinSizeMax = 30
